@@ -1,0 +1,23 @@
+* Wild notifier
+** TODO TODO event at 15:00
+   SCHEDULED: <2018-01-04 Thu 15:00>
+** DONE DONE event at 16:00
+   SCHEDULED: <2018-01-04 Thu 16:00>
+** TODO TODO event scheduled on 16:00 with deadline at 17:00
+   DEADLINE: <2018-01-04 Thu 17:00> SCHEDULED: <2018-01-04 Thu 16:00>
+** TODO TODO event at 16:00 with notifications before 80, 60, 55, 43 and 5
+   SCHEDULED: <2018-01-04 Thu 16:00>
+   :PROPERTIES:
+   :WILD_NOTIFIER_NOTIFY_BEFORE: 80 60 55 43 5
+   :END:
+** TODO TODO event at 16:00 with NOTIFY_BEFORE property set to 31
+   SCHEDULED: <2018-01-04 Thu 16:00>
+   :PROPERTIES:
+   :NOTIFY_BEFORE: 31
+   :END:
+** TODO TODO event scheduled on today
+   SCHEDULED: <2018-01-04 Thu>
+** TODO TODO event scheduled on today's noon
+   SCHEDULED: <2018-01-04 Thu 00:00>
+** TODO TODO event scheduled on tomorrow
+   SCHEDULED: <2018-01-05 Fri>
