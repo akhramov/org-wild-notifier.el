@@ -171,20 +171,21 @@ MARKER acts like event's identifier."
 (defun org-wild-notifier-check ()
   "Parse agenda view and notify about upcomming events."
   (interactive)
-  (let ((org-agenda-use-time-grid nil)
-        (org-agenda-compact-blocks t)
-        (org-agenda-window-setup 'current-window))
+  (save-window-excursion
+    (let ((org-agenda-use-time-grid nil)
+          (org-agenda-compact-blocks t)
+          (org-agenda-window-setup 'current-window))
 
-    (org-agenda-list 2)
+      (org-agenda-list 2)
 
-    (-each
-      (->> (org-wild-notifier--retrieve-events)
-           (-map 'org-wild-notifier--check-event)
-           (-flatten)
-           (-uniq))
-      'org-wild-notifier--notify)
+      (-each
+        (->> (org-wild-notifier--retrieve-events)
+             (-map 'org-wild-notifier--check-event)
+             (-flatten)
+             (-uniq))
+        'org-wild-notifier--notify)
 
-    (kill-buffer)))
+      (kill-buffer))))
 
 ;;;###autoload
 (defun org-wild-notifier-stop ()
