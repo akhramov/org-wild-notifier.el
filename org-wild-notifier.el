@@ -37,16 +37,30 @@
 (require 'alert)
 (require 'org-agenda)
 
-(defvar org-wild-notifier-alert-time 10
+
+(defgroup org-wild-notifier nil
+  "org-wild-notifier customization options"
+  :group 'org)
+
+(defcustom org-wild-notifier-alert-time 10
   "Time in minutes to get a notification about upcomming event.
-Cannot be less than 1.")
+Cannot be less than 1."
+  :package-version '(org-wild-notifier . "0.1.0")
+  :group 'org-wild-notifier
+  :type 'integer)
 
-(defvar org-wild-notifier-alert-times-property "WILD_NOTIFIER_NOTIFY_BEFORE"
+(defcustom org-wild-notifier-alert-times-property "WILD_NOTIFIER_NOTIFY_BEFORE"
   "Use this property in your agenda files to add additional notifications \
-to an event.")
+to an event."
+  :package-version '(org-wild-notifier . "0.1.0")
+  :group 'org-wild-notifier
+  :type 'string)
 
-(defvar org-wild-notifier-notification-title "Agenda"
-  "Notifications title.")
+(defcustom org-wild-notifier-notification-title "Agenda"
+  "Notifications title."
+  :package-version '(org-wild-notifier . "0.1.0")
+  :group 'org-wild-notifier
+  :type 'string)
 
 (defvar org-wild-notifier--day-wide-events nil
   "If truthy, notifies about day-wide events.")
@@ -74,6 +88,8 @@ in order to ignore seconds."
 For now, the only case that handled is day-wide events."
   (when org-wild-notifier--day-wide-events
     (let ((today (org-wild-notifier--today)))
+      ;; SPIKE: Org timestamps without "time" section are shorter than
+      ;; 16 characters.
       (--any-p (and (<= (length (car it)) 16) (equal today (cdr it)))
                (cadr (assoc 'times event))))))
 
@@ -96,13 +112,13 @@ Returns a list of notification intervals."
 
 (defun org-wild-notifier--time-left (seconds)
   "Human-friendly representation for SECONDS."
-  (--> seconds
-       (pcase it
+  (-> seconds
+       (pcase
          ((pred (>= 0)) "today")
          ((pred (>= 3600)) "in %M")
          (_ "in %H %M"))
 
-       (format-seconds it seconds)))
+       (format-seconds seconds)))
 
 (defun org-wild-notifier--notification-text (interval event)
   "For given INTERVAL and EVENT get notification wording."
@@ -134,7 +150,7 @@ EVENT-MSG is a string representation of the event."
   "Extract timestamps from MARKER.
 Timestamps are extracted as cons cells.  car holds org-formatted
 string, cdr holds time in list-of-integer format."
-  (remove nil
+  (-non-nil
    (--map
     (let ((org-timestamp (org-entry-get marker it)))
       (and org-timestamp
