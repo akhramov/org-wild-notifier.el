@@ -68,6 +68,9 @@ to an event."
 (defvar org-wild-notifier--timer nil
   "Timer value.")
 
+(defvar org-wild-notifier--agenda-buffer-name "*org wild notifier affairs*"
+  "A name for temporary 'org-agenda' buffer.")
+
 (defun org-wild-notifier--time= (&rest list)
   "Compare timestamps.
 Comparison is performed by converted each element of LIST onto string
@@ -190,7 +193,8 @@ MARKER acts like event's identifier."
   (save-window-excursion
     (let ((org-agenda-use-time-grid nil)
           (org-agenda-compact-blocks t)
-          (org-agenda-window-setup 'current-window))
+          (org-agenda-window-setup 'current-window)
+          (org-agenda-buffer-tmp-name org-wild-notifier--agenda-buffer-name))
 
       (org-agenda-list 2)
 
