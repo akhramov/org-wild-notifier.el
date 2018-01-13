@@ -1,4 +1,4 @@
-;;; org-wild-notifier.el --- Customizable org-agenda notifications
+;;; org-wild-notifier.el --- Customizable org-agenda notifications -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2017 Artem Khramov
 
