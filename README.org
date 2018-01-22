@@ -59,8 +59,8 @@ This package is available on [[http://melpa.milkbox.net/][MELPA]].
 ** How do I use the package?
 
 This package works in two modes:
-- Timer mode: automatically runs checks once a minute. Can be enabled
-  by ~org-wild-notifier-start~ and stopped by ~org-wild-notifier-start~.
+- Automatic mode: you can toggle timer-based minor mode by invoking
+  ~org-wild-notifier-mode~.
 - Manual mode: user runs checks by invoking ~org-wild-notifier-check~.
 
 ** Wait. Wild?
