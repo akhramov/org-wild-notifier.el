@@ -1,6 +1,8 @@
 * org-wild-notifier.el
 
 [[https://travis-ci.org/akhramov/org-wild-notifier.el][https://travis-ci.org/akhramov/org-wild-notifier.el.svg?branch=master]]
+[[https://stable.melpa.org/#/org-wild-notifier][file:https://stable.melpa.org/packages/org-wild-notifier-badge.svg]]
+[[https://melpa.org/#/org-wild-notifier][file:https://melpa.org/packages/org-wild-notifier-badge.svg]]
 
 ** What is it?
 A package which adds notification support for org-agenda views.
@@ -52,8 +54,7 @@ A bad example on how to define your own styles can be found [[https://github.com
 
 
 ** How do I install the package?
-Uhm... I hope that one day this package will be published to
-MELPA. But meanwhile try your luck using [[https://github.com/quelpa/quelpa][Quelpa]].
+This package is available on [[http://melpa.milkbox.net/][MELPA]].
 
 ** How do I use the package?
 
