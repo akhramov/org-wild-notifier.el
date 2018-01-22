@@ -25,6 +25,11 @@
 ;;; Commentary:
 
 ;; This package provides notification functions for org-agenda.
+;;
+;; To perform a one-time check use `org-wild-notifier-check'
+;; function.
+;; To enable timer-based notifications please use
+;;`org-wild-notifier-mode'.
 ;; Notification times can be customized either globally (for all org
 ;; entries) through `org-wild-notifier-alert-time' variable or on per
 ;; org entry basis using `WILD_NOTIFIER_NOTIFY_BEFORE` property, which
@@ -186,6 +191,24 @@ MARKER acts like event's identifier."
     (title . ,(org-wild-notifier--extract-title marker))
     (intervals . ,(org-wild-notifier--extract-notication-intervals marker))))
 
+
+(defun org-wild-notifier--stop ()
+  "Stops the notification timer."
+  (-some-> org-wild-notifier--timer cancel-timer))
+
+(defun org-wild-notifier--start ()
+  "Start the notification timer.  Cancel old one, if any.
+Timer is scheduled on the beginning of every minute, so for
+smoother experience this function also runs a check without timer."
+  (org-wild-notifier--stop)
+
+  (let ((org-wild-notifier--day-wide-events t))
+    (org-wild-notifier-check))
+
+  (--> (format-time-string "%H:%M" (time-add (current-time) 60))
+       (run-at-time it 60 'org-wild-notifier-check)
+       (setf org-wild-notifier--timer it)))
+
 ;;;###autoload
 (defun org-wild-notifier-check ()
   "Parse agenda view and notify about upcomming events."
@@ -208,25 +231,15 @@ MARKER acts like event's identifier."
       (kill-buffer))))
 
 ;;;###autoload
-(defun org-wild-notifier-stop ()
-  "Stops the notification timer."
-  (interactive)
-  (-some-> org-wild-notifier--timer cancel-timer))
-
-;;;###autoload
-(defun org-wild-notifier-start ()
-  "Start the notification timer.  Cancel old one, if any.
-Timer is scheduled on the beginning of every minute, so for
-smoother experience this function also runs a check without timer."
-  (interactive)
-  (org-wild-notifier-stop)
-
-  (let ((org-wild-notifier--day-wide-events t))
-    (org-wild-notifier-check))
-
-  (--> (format-time-string "%H:%M" (time-add (current-time) 60))
-       (run-at-time it 60 'org-wild-notifier-check)
-       (setf org-wild-notifier--timer it)))
+(define-minor-mode org-wild-notifier-mode
+  "Toggle org notifications globally.
+When enabled parses your agenda once a minute and emits notifications
+if needed."
+  :global
+  :lighter "Org Wild Notifier"
+  (if org-wild-notifier-mode
+      (org-wild-notifier--start)
+    (org-wild-notifier--stop)))
 
 (provide 'org-wild-notifier)
 
