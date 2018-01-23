@@ -38,6 +38,7 @@
   `(ert-deftest ,test-name ()
      ,desc
      (cl-letf* ((org-agenda-files (list (expand-file-name ,fixture "fixtures")))
+                (org-todo-keywords (list "TODO" "IN PROGRESS" "DONE"))
                 (time-string (format "January 4, 2018 %s" ,time))
                 ((symbol-function 'current-time)
                  (lambda () (apply 'encode-time (parse-time-string time-string))))
@@ -108,3 +109,41 @@ events"
   :time "23:50"
   :expected-alerts
   ("TODO event scheduled on tomorrow in 10 minutes"))
+
+(org-wild-notifier-test whitelist
+  "Tests that whitelist option filters out events."
+  :time "15:50"
+  :expected-alerts
+  ("TODO event at 16:00 with NOTIFY_BEFORE property set to 31 in 10 minutes"
+   "TODO event at 16:00 with notifications before 80, 60, 55, 43 and 5 in 10 \
+minutes"
+   "TODO event scheduled on 16:00 with deadline at 17:00 in 10 minutes"))
+
+(org-wild-notifier-test whitelist-disabled
+  "Tests that whitelist option can be disabled"
+  :time "15:50"
+  :overrides ((org-wild-notifier-keyword-whitelist nil))
+  :expected-alerts
+  ("TODO event at 16:00 with NOTIFY_BEFORE property set to 31 in 10 minutes"
+   "TODO event at 16:00 with notifications before 80, 60, 55, 43 and 5 in 10 minutes"
+   "TODO event scheduled on 16:00 with deadline at 17:00 in 10 minutes"
+   "Plain event at 16:00 in 10 minutes"
+   "IN PROGRESS event at 16:00 in 10 minutes"
+   "DONE event at 16:00 in 10 minutes"))
+
+(org-wild-notifier-test whitelist-with-two-items
+  "Tests that whitelist option can contain more than one items"
+  :time "15:50"
+  :overrides ((org-wild-notifier-keyword-whitelist '("IN PROGRESS" "DONE")))
+  :expected-alerts
+  ("IN PROGRESS event at 16:00 in 10 minutes"
+   "DONE event at 16:00 in 10 minutes"))
+
+(org-wild-notifier-test blacklist
+  "Tests that blacklist option filters out events."
+  :time "15:50"
+  :overrides ((org-wild-notifier-keyword-whitelist '())
+              (org-wild-notifier-keyword-blacklist '("TODO" "DONE")))
+  :expected-alerts
+  ("Plain event at 16:00 in 10 minutes"
+   "IN PROGRESS event at 16:00 in 10 minutes"))

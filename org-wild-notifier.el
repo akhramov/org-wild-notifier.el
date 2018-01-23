@@ -4,7 +4,7 @@
 
 ;; Author: Artem Khramov <futu.fata@gmail.com>
 ;; Created: 6 Jan 2017
-;; Version: 0.1
+;; Version: 0.2.2
 ;; Package-Requires: ((alert "1.2") (dash "2.13.0") (org "8.0"))
 ;; Keywords: notification alert org org-agenda agenda
 ;; URL: https://github.com/akhramov/org-wild-notifier
@@ -35,6 +35,11 @@
 ;; org entry basis using `WILD_NOTIFIER_NOTIFY_BEFORE` property, which
 ;; in turn is customizable via
 ;; `org-wild-notifier-alert-times-property' variable.
+;; By default you get notifications about TODO events only.  To
+;; customize that behavior please use
+;; `org-wild-notifier-keyword-whitelist' variable.  In contrary, if
+;; you don't want to receive notifications regarding certain events,
+;; you can use `org-wild-notifier-keyword-blacklist' variable.
 
 ;;; Code:
 
@@ -66,6 +71,19 @@ to an event."
   :package-version '(org-wild-notifier . "0.1.0")
   :group 'org-wild-notifier
   :type 'string)
+
+(defcustom org-wild-notifier-keyword-whitelist '("TODO")
+  "Receive notifications for these keywords only.
+Leave this variable blank if you do not want to filter anything."
+  :package-version '(org-wild-notifier . "0.2.2")
+  :group 'org-wild-notifier
+  :type '(repeat string))
+
+(defcustom org-wild-notifier-keyword-blacklist nil
+  "Never receive notifications for these keywords."
+  :package-version '(org-wild-notifier . "0.2.2")
+  :group 'org-wild-notifier
+  :type '(repeat string))
 
 (defvar org-wild-notifier--day-wide-events nil
   "If truthy, notifies about day-wide events.")
@@ -140,13 +158,37 @@ Returns a list of notification messages"
   (->> (org-wild-notifier--notifications event)
        (--map (org-wild-notifier--notification-text it event))))
 
+(defun org-wild-notifier--entry-whitelisted-p (marker)
+  "Check if MARKER is whitelisted."
+  (-contains-p org-wild-notifier-keyword-whitelist
+               (org-entry-get marker "TODO")))
+
+(defun org-wild-notifier--apply-whitelist (markers)
+  "Apply whitelist to MARKERS."
+  (if org-wild-notifier-keyword-whitelist
+      (-filter 'org-wild-notifier--entry-whitelisted-p markers)
+    markers))
+
+(defun org-wild-notifier--entry-blacklisted-p (marker)
+  "Check if MARKER is blacklisted."
+  (-contains-p org-wild-notifier-keyword-blacklist
+               (org-entry-get marker "TODO")))
+
+(defun org-wild-notifier--apply-blacklist (markers)
+  "Apply blacklist to MARKERS."
+  (if org-wild-notifier-keyword-blacklist
+      (-remove 'org-wild-notifier--entry-blacklisted-p markers)
+    markers))
+
 (defun org-wild-notifier--retrieve-events ()
   "Get events from agenda view."
   (->> (org-split-string (buffer-string) "\n")
        (--map (plist-get
                (org-fix-agenda-info (text-properties-at 0 it))
                'org-marker))
-       (--filter (equal "TODO" (org-entry-get it "TODO")))
+       (-non-nil)
+       (org-wild-notifier--apply-whitelist)
+       (org-wild-notifier--apply-blacklist)
        (-map 'org-wild-notifier--gather-info)))
 
 (defun org-wild-notifier--notify (event-msg)
