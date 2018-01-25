@@ -7,7 +7,7 @@
 ;; Version: 0.2.2
 ;; Package-Requires: ((alert "1.2") (dash "2.13.0") (org "8.0"))
 ;; Keywords: notification alert org org-agenda agenda
-;; URL: https://github.com/akhramov/org-wild-notifier
+;; URL: https://github.com/akhramov/org-wild-notifier.el
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
