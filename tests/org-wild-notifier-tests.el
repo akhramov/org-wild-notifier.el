@@ -147,3 +147,9 @@ minutes"
   :expected-alerts
   ("Plain event at 16:00 in 10 minutes"
    "IN PROGRESS event at 16:00 in 10 minutes"))
+
+(ert-deftest preserves-agenda-buffer-name ()
+  "Test that org-wild-notifier-check doesn't change `org-agenda-buffer-name`."
+  (let ((old-agenda-buffer-name org-agenda-buffer-name))
+    (org-wild-notifier-check)
+    (should (equal org-agenda-buffer-name old-agenda-buffer-name))))

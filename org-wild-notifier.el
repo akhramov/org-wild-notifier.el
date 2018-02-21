@@ -259,6 +259,7 @@ smoother experience this function also runs a check without timer."
     (let ((org-agenda-use-time-grid nil)
           (org-agenda-compact-blocks t)
           (org-agenda-window-setup 'current-window)
+          (org-agenda-buffer-name nil)
           (org-agenda-buffer-tmp-name org-wild-notifier--agenda-buffer-name))
 
       (org-agenda-list 2)
