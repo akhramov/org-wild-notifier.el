@@ -58,7 +58,8 @@
   "Tests that it notifies before standard notification time (10 minutes)"
   :time "15:50"
   :expected-alerts
-  ("TODO event at 16:00 with NOTIFY_BEFORE property set to 31 in 10 minutes"
+  ("event with raw date at 16:00 in 10 minutes"
+   "TODO event at 16:00 with NOTIFY_BEFORE property set to 31 in 10 minutes"
    "TODO event at 16:00 with notifications before 80, 60, 55, 43 and 5 in \
 10 minutes"
    "TODO event scheduled on 16:00 with deadline at 17:00 in 10 minutes"))
@@ -68,7 +69,8 @@
   :time "14:50"
   :overrides ((org-wild-notifier-alert-time 70))
   :expected-alerts
-  ("TODO event at 16:00 with NOTIFY_BEFORE property set to 31 in \
+  ("event with raw date at 16:00 in 1 hour 10 minutes"
+   "TODO event at 16:00 with NOTIFY_BEFORE property set to 31 in \
 1 hour 10 minutes"
    "TODO event at 16:00 with notifications before 80, 60, 55, 43 and 5 in \
 1 hour 10 minutes"
@@ -114,7 +116,8 @@ events"
   "Tests that whitelist option filters out events."
   :time "15:50"
   :expected-alerts
-  ("TODO event at 16:00 with NOTIFY_BEFORE property set to 31 in 10 minutes"
+  ("event with raw date at 16:00 in 10 minutes"
+   "TODO event at 16:00 with NOTIFY_BEFORE property set to 31 in 10 minutes"
    "TODO event at 16:00 with notifications before 80, 60, 55, 43 and 5 in 10 \
 minutes"
    "TODO event scheduled on 16:00 with deadline at 17:00 in 10 minutes"))
@@ -124,7 +127,8 @@ minutes"
   :time "15:50"
   :overrides ((org-wild-notifier-keyword-whitelist nil))
   :expected-alerts
-  ("TODO event at 16:00 with NOTIFY_BEFORE property set to 31 in 10 minutes"
+  ("event with raw date at 16:00 in 10 minutes"
+   "TODO event at 16:00 with NOTIFY_BEFORE property set to 31 in 10 minutes"
    "TODO event at 16:00 with notifications before 80, 60, 55, 43 and 5 in 10 minutes"
    "TODO event scheduled on 16:00 with deadline at 17:00 in 10 minutes"
    "Plain event at 16:00 in 10 minutes"

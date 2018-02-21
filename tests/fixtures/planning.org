@@ -7,6 +7,8 @@
    SCHEDULED: <2018-01-04 Wed 16:00>
 ** Plain event at 16:00
    SCHEDULED: <2018-01-04 Wed 16:00>
+** TODO event with raw date at 16:00
+   <2018-01-04 Wed 16:00>
 ** TODO TODO event scheduled on 16:00 with deadline at 17:00
    DEADLINE: <2018-01-04 Thu 17:00> SCHEDULED: <2018-01-04 Thu 16:00>
 ** TODO TODO event at 16:00 with notifications before 80, 60, 55, 43 and 5

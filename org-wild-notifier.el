@@ -206,7 +206,7 @@ string, cdr holds time in list-of-integer format."
       (and org-timestamp
            (cons org-timestamp
                  (apply 'encode-time (org-parse-time-string org-timestamp)))))
-    '("DEADLINE" "SCHEDULED"))))
+    '("DEADLINE" "SCHEDULED" "TIMESTAMP"))))
 
 (defun org-wild-notifier--extract-title (marker)
   "Extract event title from MARKER.
