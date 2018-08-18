@@ -91,9 +91,6 @@ Leave this variable blank if you do not want to filter anything."
 (defvar org-wild-notifier--timer nil
   "Timer value.")
 
-(defvar org-wild-notifier--agenda-buffer-name "*org wild notifier affairs*"
-  "A name for temporary 'org-agenda' buffer.")
-
 (defun org-wild-notifier--time= (&rest list)
   "Compare timestamps.
 Comparison is performed by converted each element of LIST onto string
@@ -245,33 +242,37 @@ smoother experience this function also runs a check without timer."
   (org-wild-notifier--stop)
 
   (let ((org-wild-notifier--day-wide-events t))
-    (org-wild-notifier-check))
+    (org-wild-notifier-check t))
 
   (--> (format-time-string "%H:%M" (time-add (current-time) 60))
        (run-at-time it 60 'org-wild-notifier-check)
        (setf org-wild-notifier--timer it)))
 
 ;;;###autoload
-(defun org-wild-notifier-check ()
-  "Parse agenda view and notify about upcomming events."
+(defun org-wild-notifier-check (&optional no-redo)
+  "Parse agenda view and notify about upcomming events.
+NO-REDO skips agenda redo phase"
   (interactive)
-  (save-window-excursion
-    (let ((org-agenda-use-time-grid nil)
-          (org-agenda-compact-blocks t)
-          (org-agenda-window-setup 'current-window)
-          (org-agenda-buffer-name nil)
-          (org-agenda-buffer-tmp-name org-wild-notifier--agenda-buffer-name))
+  (let ((org-agenda-use-time-grid nil)
+        (org-agenda-compact-blocks t)
+        (org-agenda-window-setup 'current-window)
+        (org-agenda-sticky t))
 
-      (org-agenda-list 2)
+    (org-agenda-list 2)
 
-      (-each
-        (->> (org-wild-notifier--retrieve-events)
-             (-map 'org-wild-notifier--check-event)
-             (-flatten)
-             (-uniq))
-        'org-wild-notifier--notify)
+    (-each
+      (->> (org-wild-notifier--retrieve-events)
+           (-map 'org-wild-notifier--check-event)
+           (-flatten)
+           (-uniq))
+      'org-wild-notifier--notify)
 
-      (kill-buffer))))
+    (kill-buffer org-agenda-buffer-name))
+  (unwind-protect
+      (let ((inhibit-message t))
+        (or no-redo (org-agenda-redo t)))))
+
+
 
 ;;;###autoload
 (define-minor-mode org-wild-notifier-mode
