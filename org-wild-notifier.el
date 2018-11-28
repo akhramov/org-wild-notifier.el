@@ -46,6 +46,7 @@
 (require 'dash)
 (require 'alert)
 (require 'org-agenda)
+(require 'cl-lib)
 
 
 (defgroup org-wild-notifier nil
@@ -260,7 +261,8 @@ smoother experience this function also runs a check without timer."
           (org-agenda-compact-blocks t)
           (org-agenda-window-setup 'current-window)
           (org-agenda-buffer-name nil)
-          (org-agenda-buffer-tmp-name org-wild-notifier--agenda-buffer-name))
+          (org-agenda-buffer-tmp-name org-wild-notifier--agenda-buffer-name)
+	  (already-opened org-agenda-new-buffers))
 
       (org-agenda-list 2)
 
@@ -271,7 +273,10 @@ smoother experience this function also runs a check without timer."
              (-uniq))
         'org-wild-notifier--notify)
 
-      (kill-buffer))))
+      (let ((newly-opened
+	     (cl-set-difference org-agenda-new-buffers already-opened)))
+	(org-release-buffers newly-opened)
+	(org-agenda-Quit)))))
 
 ;;;###autoload
 (define-minor-mode org-wild-notifier-mode
