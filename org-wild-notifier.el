@@ -271,7 +271,7 @@ smoother experience this function also runs a check without timer."
              (-uniq))
         'org-wild-notifier--notify)
 
-      (kill-buffer))))
+      (org-agenda-exit))))
 
 ;;;###autoload
 (define-minor-mode org-wild-notifier-mode
