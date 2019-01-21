@@ -237,7 +237,7 @@ MARKER acts like event's identifier."
 
 (defun org-wild-notifier--stop ()
   "Stops the notification timer."
-  (-some-> org-wild-notifier--timer cancel-timer))
+  (-some-> org-wild-notifier--timer (cancel-timer)))
 
 (defun org-wild-notifier--start ()
   "Start the notification timer.  Cancel old one, if any.
