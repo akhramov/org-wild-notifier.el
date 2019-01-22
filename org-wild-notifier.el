@@ -237,7 +237,7 @@ MARKER acts like event's identifier."
 
 (defun org-wild-notifier--stop ()
   "Stops the notification timer."
-  (-some-> org-wild-notifier--timer cancel-timer))
+  (-some-> org-wild-notifier--timer (cancel-timer)))
 
 (defun org-wild-notifier--start ()
   "Start the notification timer.  Cancel old one, if any.
@@ -257,26 +257,27 @@ smoother experience this function also runs a check without timer."
   "Parse agenda view and notify about upcomming events."
   (interactive)
   (save-window-excursion
-    (let ((org-agenda-use-time-grid nil)
-          (org-agenda-compact-blocks t)
-          (org-agenda-window-setup 'current-window)
-          (org-agenda-buffer-name nil)
-          (org-agenda-buffer-tmp-name org-wild-notifier--agenda-buffer-name)
-	  (already-opened org-agenda-new-buffers))
+    (save-restriction
+        (let ((org-agenda-use-time-grid nil)
+              (org-agenda-compact-blocks t)
+              (org-agenda-window-setup 'current-window)
+              (org-agenda-buffer-name nil)
+              (org-agenda-buffer-tmp-name org-wild-notifier--agenda-buffer-name)
+              (already-opened org-agenda-new-buffers))
 
-      (org-agenda-list 2)
+          (org-agenda-list 2)
 
-      (-each
-        (->> (org-wild-notifier--retrieve-events)
-             (-map 'org-wild-notifier--check-event)
-             (-flatten)
-             (-uniq))
-        'org-wild-notifier--notify)
+          (-each
+            (->> (org-wild-notifier--retrieve-events)
+                 (-map 'org-wild-notifier--check-event)
+                 (-flatten)
+                 (-uniq))
+            'org-wild-notifier--notify)
 
-      (let ((newly-opened
-	     (cl-set-difference org-agenda-new-buffers already-opened)))
-	(org-release-buffers newly-opened)
-	(org-agenda-Quit)))))
+          (let ((newly-opened
+                 (cl-set-difference org-agenda-new-buffers already-opened)))
+            (org-release-buffers newly-opened)
+            (org-agenda-Quit))))))
 
 ;;;###autoload
 (define-minor-mode org-wild-notifier-mode
