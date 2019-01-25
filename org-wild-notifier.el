@@ -265,7 +265,7 @@ smoother experience this function also runs a check without timer."
               (org-agenda-buffer-tmp-name org-wild-notifier--agenda-buffer-name)
               (already-opened org-agenda-new-buffers))
 
-          (org-agenda-list 2)
+          (org-agenda-list 2 (org-read-date nil nil "today"))
 
           (-each
             (->> (org-wild-notifier--retrieve-events)
