@@ -27,7 +27,7 @@ env:
   - EVM_EMACS=emacs-25.2-travis
 script:
   - ln -s tests/fixtures/ fixtures
-  - cask exec emacs --batch -l ert -l org-wild-notifier.el -l tests/org-wild-notifier-tests.el -f ert-run-tests-batch-and-exit
+  - cask exec emacs --batch -l ert -l org-wild-notifier.el -l tests/org-wild-notifier-tests.el  -l org-wild-notifier.el -f ert-run-tests-batch-and-exit
 
 notifications:
 email: false
