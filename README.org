@@ -28,7 +28,7 @@ Oh, yes. This package provides some configuration options:
 | Title of notifications                                                                          | org-wild-notifier-notification-title   | Agenda                      |
 | Property which adds additional notifications                                                    | org-wild-notifier-alert-times-property | WILD_NOTIFIER_NOTIFY_BEFORE |
 | Org keyword based whitelist. You'll get notified /only/ about events specified by this variable | org-wild-notifier-keyword-whitelist    | '("TODO")                   |
-| Org keyword based whitelist. You'll /never/ notified about events specified by this variable    | org-wild-notifier-keyword-whitelist    | nil                         |
+| Org keyword based whitelist. You'll /never/ be notified about events specified by this variable  | org-wild-notifier-keyword-whitelist    | nil                         |
 
 The last property demands further explanations.
 
