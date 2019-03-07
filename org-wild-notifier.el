@@ -4,7 +4,7 @@
 
 ;; Author: Artem Khramov <futu.fata@gmail.com>
 ;; Created: 6 Jan 2017
-;; Version: 0.2.4
+;; Version: 0.3.0
 ;; Package-Requires: ((alert "1.2") (async "1.9.3") (dash "2.13.0") (emacs "24.4"))
 ;; Keywords: notification alert org org-agenda agenda
 ;; URL: https://github.com/akhramov/org-wild-notifier.el
