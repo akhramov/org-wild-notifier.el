@@ -27,6 +27,10 @@
 (require 'ert)
 (require 'org-wild-notifier)
 (require 'dash)
+(require 'subr-x)
+
+(defmacro async-sandbox (fn)
+  `(funcall ,fn))
 
 (cl-defmacro org-wild-notifier-test
     (test-name desc
