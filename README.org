@@ -26,9 +26,10 @@ Oh, yes. This package provides some configuration options:
 |-------------------------------------------------------------------------------------------------+----------------------------------------+-----------------------------|
 | Alert time in minutes                                                                           | org-wild-notifier-alert-time           | 10                          |
 | Title of notifications                                                                          | org-wild-notifier-notification-title   | Agenda                      |
-| Property which adds additional notifications                                                    | org-wild-notifier-alert-times-property | WILD_NOTIFIER_NOTIFY_BEFORE |
 | Org keyword based whitelist. You'll get notified /only/ about events specified by this variable | org-wild-notifier-keyword-whitelist    | '("TODO")                   |
-| Org keyword based whitelist. You'll /never/ be notified about events specified by this variable  | org-wild-notifier-keyword-whitelist    | nil                         |
+| Org keyword based blacklist. You'll /never/ be notified about events specified by this variable | org-wild-notifier-keyword-blacklist    | nil                         |
+| Property which adds additional notifications                                                    | org-wild-notifier-alert-times-property | WILD_NOTIFIER_NOTIFY_BEFORE |
+
 
 The last property demands further explanations.
 
