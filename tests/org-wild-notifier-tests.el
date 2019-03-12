@@ -116,7 +116,7 @@ events"
   :expected-alerts
   ("TODO event scheduled on tomorrow in 10 minutes"))
 
-(org-wild-notifier-test whitelist
+(org-wild-notifier-test keyword-whitelist
   "Tests that whitelist option filters out events."
   :time "15:50"
   :expected-alerts
@@ -126,7 +126,7 @@ events"
 minutes"
    "TODO event scheduled on 16:00 with deadline at 17:00 in 10 minutes"))
 
-(org-wild-notifier-test whitelist-disabled
+(org-wild-notifier-test keyword-whitelist-disabled
   "Tests that whitelist option can be disabled"
   :time "15:50"
   :overrides ((org-wild-notifier-keyword-whitelist nil))
@@ -135,11 +135,12 @@ minutes"
    "TODO event at 16:00 with NOTIFY_BEFORE property set to 31 in 10 minutes"
    "TODO event at 16:00 with notifications before 80, 60, 55, 43 and 5 in 10 minutes"
    "TODO event scheduled on 16:00 with deadline at 17:00 in 10 minutes"
+   "Tagged event at 16:00 in 10 minutes"
    "Plain event at 16:00 in 10 minutes"
    "IN PROGRESS event at 16:00 in 10 minutes"
    "DONE event at 16:00 in 10 minutes"))
 
-(org-wild-notifier-test whitelist-with-two-items
+(org-wild-notifier-test keyword-whitelist-with-two-items
   "Tests that whitelist option can contain more than one items"
   :time "15:50"
   :overrides ((org-wild-notifier-keyword-whitelist '("IN PROGRESS" "DONE")))
@@ -147,17 +148,48 @@ minutes"
   ("IN PROGRESS event at 16:00 in 10 minutes"
    "DONE event at 16:00 in 10 minutes"))
 
-(org-wild-notifier-test blacklist
+(org-wild-notifier-test keyword-blacklist
   "Tests that blacklist option filters out events."
   :time "15:50"
   :overrides ((org-wild-notifier-keyword-whitelist '())
               (org-wild-notifier-keyword-blacklist '("TODO" "DONE")))
   :expected-alerts
-  ("Plain event at 16:00 in 10 minutes"
+  ("Tagged event at 16:00 in 10 minutes"
+   "Plain event at 16:00 in 10 minutes"
    "IN PROGRESS event at 16:00 in 10 minutes"))
 
-(ert-deftest preserves-agenda-buffer-name ()
-  "Test that org-wild-notifier-check doesn't change `org-agenda-buffer-name`."
-  (let ((old-agenda-buffer-name org-agenda-buffer-name))
-    (org-wild-notifier-check)
-    (should (equal org-agenda-buffer-name old-agenda-buffer-name))))
+(org-wild-notifier-test tags-whitelist
+  "Tests that whitelist option filters out events."
+  :time "15:50"
+  :overrides ((org-wild-notifier-tags-whitelist '("bar"))
+              (org-wild-notifier-keyword-whitelist '()))
+  :expected-alerts
+  ("Tagged event at 16:00 in 10 minutes"))
+
+(org-wild-notifier-test two-tags-whitelist
+  "Tests that whitelist option filters out events."
+  :time "15:50"
+  :overrides ((org-wild-notifier-tags-whitelist '("bar" "baz"))
+              (org-wild-notifier-keyword-whitelist '()))
+  :expected-alerts
+  ("event with raw date at 16:00 in 10 minutes"
+   "Tagged event at 16:00 in 10 minutes"))
+
+(org-wild-notifier-test mixed-whitelist
+  "Tests that whitelist option filters out events."
+  :time "15:50"
+  :overrides ((org-wild-notifier-tags-whitelist '("bar" "baz"))
+              (org-wild-notifier-keyword-whitelist '("IN PROGRESS")))
+  :expected-alerts
+  ("event with raw date at 16:00 in 10 minutes"
+   "Tagged event at 16:00 in 10 minutes"
+   "IN PROGRESS event at 16:00 in 10 minutes"))
+
+(org-wild-notifier-test mixed-tags-whitelist-blacklist
+  "Tests that blacklist option filters out events."
+  :time "15:50"
+  :overrides ((org-wild-notifier-keyword-whitelist '())
+              (org-wild-notifier-tags-whitelist '("baz"))
+              (org-wild-notifier-tags-blacklist '("foo")))
+  :expected-alerts
+  ("event with raw date at 16:00 in 10 minutes"))
