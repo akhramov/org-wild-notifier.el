@@ -5,7 +5,7 @@
 ;; Author: Artem Khramov <futu.fata@gmail.com>
 ;; Created: 6 Jan 2017
 ;; Version: 0.3.0
-;; Package-Requires: ((alert "1.2") (async "1.9.3") (dash "2.13.0") (emacs "24.4"))
+;; Package-Requires: ((alert "1.2") (async "1.9.3") (dash "2.13.0") (dash-functional "1.2.0") (emacs "24.4"))
 ;; Keywords: notification alert org org-agenda agenda
 ;; URL: https://github.com/akhramov/org-wild-notifier.el
 
@@ -44,6 +44,7 @@
 ;;; Code:
 
 (require 'dash)
+(require 'dash-functional)
 (require 'alert)
 (require 'async)
 (require 'org-agenda)
@@ -84,6 +85,19 @@ Leave this variable blank if you do not want to filter anything."
 (defcustom org-wild-notifier-keyword-blacklist nil
   "Never receive notifications for these keywords."
   :package-version '(org-wild-notifier . "0.2.2")
+  :group 'org-wild-notifier
+  :type '(repeat string))
+
+(defcustom org-wild-notifier-tags-whitelist nil
+  "Receive notifications for these tags only.
+Leave this variable blank if you do not want to filter anything."
+  :package-version '(org-wild-notifier . "0.3.1")
+  :group 'org-wild-notifier
+  :type '(repeat string))
+
+(defcustom org-wild-notifier-tags-blacklist nil
+  "Never receive notifications for these tags."
+  :package-version '(org-wild-notifier . "0.3.1")
   :group 'org-wild-notifier
   :type '(repeat string))
 
@@ -160,26 +174,50 @@ Returns a list of notification messages"
   (->> (org-wild-notifier--notifications event)
        (--map (org-wild-notifier--notification-text it event))))
 
-(defun org-wild-notifier--entry-whitelisted-p (marker)
-  "Check if MARKER is whitelisted."
-  (-contains-p org-wild-notifier-keyword-whitelist
-               (org-entry-get marker "TODO")))
+(defun org-wild-notifier--get-tags (marker)
+  "Retrieve tags of MARKER."
+  (-> (org-entry-get marker "TAGS")
+      (or "")
+      (org-split-string  ":")))
+
+(defun org-wild-notifier--whitelist-predicates ()
+  (->> `([,org-wild-notifier-keyword-whitelist
+          (lambda (it)
+            (-contains-p org-wild-notifier-keyword-whitelist
+                         (org-entry-get it "TODO")))]
+
+         [,org-wild-notifier-tags-whitelist
+          (lambda (it)
+            (-intersection org-wild-notifier-tags-whitelist
+                           (org-wild-notifier--get-tags it)))])
+       (--filter (aref it 0))
+       (--map (aref it 1))))
+
+(defun org-wild-notifier--blacklist-predicates ()
+  (->> `([,org-wild-notifier-keyword-blacklist
+          (lambda (it)
+            (-contains-p org-wild-notifier-keyword-blacklist
+                         (org-entry-get it "TODO")))]
+
+         [,org-wild-notifier-tags-blacklist
+          (lambda (it)
+            (-intersection org-wild-notifier-tags-blacklist
+                           (org-wild-notifier--get-tags it)))])
+       (--filter (aref it 0))
+       (--map (aref it 1))))
 
 (defun org-wild-notifier--apply-whitelist (markers)
   "Apply whitelist to MARKERS."
-  (if org-wild-notifier-keyword-whitelist
-      (-filter 'org-wild-notifier--entry-whitelisted-p markers)
+  (if-let ((whitelist-predicates (org-wild-notifier--whitelist-predicates)))
+      (-> (apply '-orfn whitelist-predicates)
+          (-filter markers))
     markers))
-
-(defun org-wild-notifier--entry-blacklisted-p (marker)
-  "Check if MARKER is blacklisted."
-  (-contains-p org-wild-notifier-keyword-blacklist
-               (org-entry-get marker "TODO")))
 
 (defun org-wild-notifier--apply-blacklist (markers)
   "Apply blacklist to MARKERS."
-  (if org-wild-notifier-keyword-blacklist
-      (-remove 'org-wild-notifier--entry-blacklisted-p markers)
+  (if-let ((blacklist-predicates (org-wild-notifier--blacklist-predicates)))
+      (-> (apply '-orfn blacklist-predicates)
+          (-remove markers))
     markers))
 
 (defun org-wild-notifier--retrieve-events ()
