@@ -193,3 +193,8 @@ minutes"
               (org-wild-notifier-tags-blacklist '("foo")))
   :expected-alerts
   ("event with raw date at 16:00 in 10 minutes"))
+
+(org-wild-notifier-test non-existent-fixture
+  "Tests that it doesn't hang if there's a non-existent agenda file."
+  :fixture "bad.org"
+  :expected-alerts ())
