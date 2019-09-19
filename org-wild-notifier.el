@@ -222,30 +222,29 @@ Returns a list of notification messages"
 
 (defun org-wild-notifier--retrieve-events ()
   "Get events from agenda view."
-  (async-sandbox
-   (let ((agenda-files (-filter 'file-exists-p org-agenda-files))
-         ;; Some package managers manipulate `load-path` variable.
-         (my-load-path load-path))
-     (lambda ()
-       (let ((org-agenda-use-time-grid nil)
-             (org-agenda-compact-blocks t))
-         (setf org-agenda-files agenda-files)
-         (setf load-path my-load-path)
+  (let ((agenda-files (-filter 'file-exists-p org-agenda-files))
+        ;; Some package managers manipulate `load-path` variable.
+        (my-load-path load-path))
+    (lambda ()
+      (let ((org-agenda-use-time-grid nil)
+            (org-agenda-compact-blocks t))
+        (setf org-agenda-files agenda-files)
+        (setf load-path my-load-path)
 
-         (package-initialize)
-         (require 'org-wild-notifier)
+        (package-initialize)
+        (require 'org-wild-notifier)
 
-         (org-agenda-list 2
-                          (org-read-date nil nil "today"))
+        (org-agenda-list 2
+                         (org-read-date nil nil "today"))
 
-         (->> (org-split-string (buffer-string) "\n")
-              (--map (plist-get
-                      (org-fix-agenda-info (text-properties-at 0 it))
-                      'org-marker))
-              (-non-nil)
-              (org-wild-notifier--apply-whitelist)
-              (org-wild-notifier--apply-blacklist)
-              (-map 'org-wild-notifier--gather-info)))))))
+        (->> (org-split-string (buffer-string) "\n")
+             (--map (plist-get
+                     (org-fix-agenda-info (text-properties-at 0 it))
+                     'org-marker))
+             (-non-nil)
+             (org-wild-notifier--apply-whitelist)
+             (org-wild-notifier--apply-blacklist)
+             (-map 'org-wild-notifier--gather-info))))))
 
 (defun org-wild-notifier--notify (event-msg)
   "Notify about an event using `alert' library.
@@ -310,12 +309,16 @@ smoother experience this function also runs a check without timer."
 (defun org-wild-notifier-check ()
   "Parse agenda view and notify about upcomming events."
   (interactive)
-  (-each
-      (->> (org-wild-notifier--retrieve-events)
-           (-map 'org-wild-notifier--check-event)
-           (-flatten)
-           (-uniq))
-    'org-wild-notifier--notify))
+
+  (async-start
+   (org-wild-notifier--retrieve-events)
+   (lambda (events)
+     (-each
+         (->> events
+              (-map 'org-wild-notifier--check-event)
+              (-flatten)
+              (-uniq))
+       'org-wild-notifier--notify))))
 
 ;;;###autoload
 (define-minor-mode org-wild-notifier-mode
