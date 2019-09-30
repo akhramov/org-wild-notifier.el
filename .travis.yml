@@ -26,9 +26,9 @@ before_install:
 
 env:
   - EVM_EMACS=emacs-24.4-travis
-  - EVM_EMACS=emacs-25.2-travis
-  - EVM_EMACS=emacs-26.2-travis
-  - EVM_EMACS=emacs-git-snapshot-travis
+  - EVM_EMACS=emacs-25.3-travis
+  - EVM_EMACS=emacs-26.3-travis-linux-xenial
+  - EVM_EMACS=emacs-git-snapshot-travis-linux-xenial
 script:
   - ln -s tests/fixtures/ fixtures
   - cask exec emacs --batch -l ert -l org-wild-notifier.el -l tests/org-wild-notifier-tests.el  -l org-wild-notifier.el -f ert-run-tests-batch-and-exit

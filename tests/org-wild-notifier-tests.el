@@ -29,8 +29,9 @@
 (require 'dash)
 (require 'subr-x)
 
-(defmacro async-sandbox (fn)
-  `(funcall ,fn))
+(defun async-start (fn callback)
+  (->> (funcall fn)
+       (funcall callback)))
 
 (cl-defmacro org-wild-notifier-test
     (test-name desc
