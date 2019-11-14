@@ -101,6 +101,14 @@ Leave this variable blank if you do not want to filter anything."
   :group 'org-wild-notifier
   :type '(repeat string))
 
+(defcustom org-wild-notifier--alert-severity 'medium
+  "Severity of the alert.
+options: 'high 'medium 'low"
+  :package-version '(org-wild-notifier . "0.3.1")
+  :group 'org-wild-notifier
+  :type 'symbol
+  :options '(high medium low))
+
 (defvar org-wild-notifier--day-wide-events nil
   "If truthy, notifies about day-wide events.")
 
@@ -249,7 +257,7 @@ Returns a list of notification messages"
 (defun org-wild-notifier--notify (event-msg)
   "Notify about an event using `alert' library.
 EVENT-MSG is a string representation of the event."
-  (alert event-msg :title org-wild-notifier-notification-title))
+  (alert event-msg :title org-wild-notifier-notification-title :severity org-wild-notifier--alert-severity))
 
 (defun org-wild-notifier--extract-time (marker)
   "Extract timestamps from MARKER.
