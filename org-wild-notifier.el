@@ -55,12 +55,13 @@
   "org-wild-notifier customization options"
   :group 'org)
 
-(defcustom org-wild-notifier-alert-time 10
+(defcustom org-wild-notifier-alert-time '(10)
   "Time in minutes to get a notification about upcomming event.
 Cannot be less than 1."
   :package-version '(org-wild-notifier . "0.1.0")
   :group 'org-wild-notifier
-  :type 'integer)
+  :type '(choice (integer :tag "Notify once")
+                 (repeat integer)))
 
 (defcustom org-wild-notifier-alert-times-property "WILD_NOTIFIER_NOTIFY_BEFORE"
   "Use this property in your agenda files to add additional notifications \
@@ -283,7 +284,7 @@ MARKER acts like the event's identifier."
   "Extract notification intervals from the event's properties.
 MARKER acts like the event's identifier.  Resulting list also contains
 standard notification interval (`org-wild-notifier-alert-time')."
-  `(,org-wild-notifier-alert-time
+  `(,@(-flatten (list org-wild-notifier-alert-time))
     ,@(-map 'string-to-number
            (org-entry-get-multivalued-property
             marker
