@@ -82,6 +82,20 @@
    "TODO event scheduled on 16:00 with deadline at 17:00 in \
 1 hour 10 minutes"))
 
+(org-wild-notifier-test alert-time-overriden-with-list
+  "Test that standard alert time can be customized & set to list"
+  :time "14:50"
+  :overrides ((org-wild-notifier-alert-time '(10 70)))
+  :expected-alerts
+  ("event with raw date at 16:00 in 1 hour 10 minutes"
+   "TODO event at 16:00 with NOTIFY_BEFORE property set to 31 in \
+1 hour 10 minutes"
+   "TODO event at 16:00 with notifications before 80, 60, 55, 43 and 5 in \
+1 hour 10 minutes"
+   "TODO event scheduled on 16:00 with deadline at 17:00 in \
+1 hour 10 minutes"
+   "TODO event at 15:00 in 10 minutes"))
+
 (org-wild-notifier-test notification-property
   "Tests that notifier takes in account the notification property"
   :time "15:17"
