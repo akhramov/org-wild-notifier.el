@@ -209,6 +209,13 @@ minutes"
   :expected-alerts
   ("event with raw date at 16:00 in 10 minutes"))
 
+(org-wild-notifier-test event-without-a-keyword
+  "Tests that blacklist option filters out events."
+  :time "19:25"
+  :overrides ((org-wild-notifier-keyword-whitelist '()))
+  :expected-alerts
+  ("event without a keyword at 19:35 in 10 minutes"))
+
 (org-wild-notifier-test non-existent-fixture
   "Tests that it doesn't hang if there's a non-existent agenda file."
   :fixture "bad.org"

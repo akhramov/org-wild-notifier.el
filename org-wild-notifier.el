@@ -233,12 +233,22 @@ Returns a list of notification messages"
   "Get events from agenda view."
   (let ((agenda-files (-filter 'file-exists-p org-agenda-files))
         ;; Some package managers manipulate `load-path` variable.
-        (my-load-path load-path))
+        (my-load-path load-path)
+        (alert-time org-wild-notifier-alert-time)
+        (keyword-whitelist org-wild-notifier-keyword-whitelist)
+        (keyword-blacklist org-wild-notifier-keyword-blacklist)
+        (tags-whitelist org-wild-notifier-tags-whitelist)
+        (tags-blacklist org-wild-notifier-tags-blacklist))
     (lambda ()
       (let ((org-agenda-use-time-grid nil)
             (org-agenda-compact-blocks t))
         (setf org-agenda-files agenda-files)
         (setf load-path my-load-path)
+        (setf org-wild-notifier-alert-time alert-time)
+        (setf org-wild-notifier-keyword-whitelist keyword-whitelist)
+        (setf org-wild-notifier-keyword-blacklist keyword-blacklist)
+        (setf org-wild-notifier-tags-whitelist tags-whitelist)
+        (setf org-wild-notifier-tags-blacklist tags-blacklist)
 
         (package-initialize)
         (require 'org-wild-notifier)
