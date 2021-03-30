@@ -230,7 +230,7 @@ Returns a list of notification messages"
 
 (defun org-wild-notifier--retrieve-events ()
   "Get events from agenda view."
-  (let ((agenda-files (-filter 'file-exists-p org-agenda-files))
+  (let ((agenda-files (-filter 'file-exists-p (org-agenda-files)))
         ;; Some package managers manipulate `load-path` variable.
         (my-load-path load-path)
         (alert-time org-wild-notifier-alert-time)
