@@ -101,6 +101,12 @@ Leave this variable blank if you do not want to filter anything."
   :group 'org-wild-notifier
   :type '(repeat string))
 
+(defcustom org-wild-notifier-entries '("DEADLINE" "SCHEDULED" "TIMESTAMP")
+  "Receive notifications from this timestamp entries"
+  :package-version '(org-wild-notifier . "0.3.1")
+  :group 'org-wild-notifier
+  :type '(repeat string))
+
 (defcustom org-wild-notifier--alert-severity 'medium
   "Severity of the alert.
 options: 'high 'medium 'low"
@@ -279,7 +285,7 @@ string, cdr holds time in list-of-integer format."
       (and org-timestamp
            (cons org-timestamp
                  (apply 'encode-time (org-parse-time-string org-timestamp)))))
-    '("DEADLINE" "SCHEDULED" "TIMESTAMP"))))
+    org-wild-notifier-entries)))
 
 (defun org-wild-notifier--extract-title (marker)
   "Extract event title from MARKER.
