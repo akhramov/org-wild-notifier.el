@@ -123,7 +123,7 @@ events"
   :time "14:59"
   :overrides ((org-wild-notifier--day-wide-events t))
   :expected-alerts
-  ("TODO event scheduled on today today"))
+  ("TODO event scheduled on today right now"))
 
 (org-wild-notifier-test next-day-events
   "Tests that user receives notifications on next day events"

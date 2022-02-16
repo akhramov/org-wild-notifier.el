@@ -164,7 +164,7 @@ Returns a list of notification intervals."
   "Human-friendly representation for SECONDS."
   (-> seconds
        (pcase
-         ((pred (>= 0)) "today")
+         ((pred (>= 0)) "right now")
          ((pred (>= 3600)) "in %M")
          (_ "in %H %M"))
 
