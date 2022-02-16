@@ -170,10 +170,18 @@ Returns a list of notification intervals."
 
        (format-seconds seconds)))
 
+(defun org-wild-notifier--get-hh-mm-from-org-time-string (time-string)
+  "Convert given org time-string TIME-STRING into string with 'hh:mm' format."
+  (if (>= (length time-string) 22)
+      (substring time-string 16 21)
+      "00:00"))
+
 (defun org-wild-notifier--notification-text (interval event)
   "For given INTERVAL and EVENT get notification wording."
-  (format "%s %s"
+  (format "%s at %s (%s)"
           (cdr (assoc 'title event))
+          (org-wild-notifier--get-hh-mm-from-org-time-string
+           (car (car (cadr (assoc 'times event)))))
           (org-wild-notifier--time-left (* 60 interval))))
 
 (defun org-wild-notifier--check-event (event)
