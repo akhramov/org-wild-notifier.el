@@ -164,22 +164,30 @@ Returns a list of notification intervals."
   "Human-friendly representation for SECONDS."
   (-> seconds
        (pcase
-         ((pred (>= 0)) "today")
+         ((pred (>= 0)) "right now")
          ((pred (>= 3600)) "in %M")
          (_ "in %H %M"))
 
        (format-seconds seconds)))
 
-(defun org-wild-notifier--notification-text (interval event)
-  "For given INTERVAL and EVENT get notification wording."
-  (format "%s %s"
+(defun org-wild-notifier--get-hh-mm-from-org-time-string (time-string)
+  "Convert given org time-string TIME-STRING into string with 'hh:mm' format."
+  (if (>= (length time-string) 22)
+      (substring time-string 16 21)
+      "00:00"))
+
+(defun org-wild-notifier--notification-text (str-interval event)
+  "For given STR-INTERVAL list and EVENT get notification wording."
+  (format "%s at %s (%s)"
           (cdr (assoc 'title event))
-          (org-wild-notifier--time-left (* 60 interval))))
+          (org-wild-notifier--get-hh-mm-from-org-time-string (car str-interval))
+          (org-wild-notifier--time-left (* 60 (cdr str-interval)))))
 
 (defun org-wild-notifier--check-event (event)
   "Get notifications for given EVENT.
 Returns a list of notification messages"
   (->> (org-wild-notifier--notifications event)
+       (--zip-with (cons (car it) other) (cadr (assoc 'times event)))
        (--map (org-wild-notifier--notification-text it event))))
 
 (defun org-wild-notifier--get-tags (marker)

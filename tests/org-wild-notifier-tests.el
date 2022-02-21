@@ -63,59 +63,59 @@
   "Tests that it notifies before standard notification time (10 minutes)"
   :time "15:50"
   :expected-alerts
-  ("event with raw date at 16:00 in 10 minutes"
-   "TODO event at 16:00 with NOTIFY_BEFORE property set to 31 in 10 minutes"
-   "TODO event at 16:00 with notifications before 80, 60, 55, 43 and 5 in \
-10 minutes"
-   "TODO event scheduled on 16:00 with deadline at 17:00 in 10 minutes"))
+  ("event with raw date at 16:00 at 16:00 (in 10 minutes)"
+   "TODO event at 16:00 with NOTIFY_BEFORE property set to 31 at 16:00 (in 10 minutes)"
+   "TODO event at 16:00 with notifications before 80, 60, 55, 43 and 5 at 16:00 (in \
+10 minutes)"
+   "TODO event scheduled on 16:00 with deadline at 17:00 at 16:00 (in 10 minutes)"))
 
 (org-wild-notifier-test alert-time-overriden
   "Test that standard alert time can be customized"
   :time "14:50"
   :overrides ((org-wild-notifier-alert-time 70))
   :expected-alerts
-  ("event with raw date at 16:00 in 1 hour 10 minutes"
-   "TODO event at 16:00 with NOTIFY_BEFORE property set to 31 in \
-1 hour 10 minutes"
-   "TODO event at 16:00 with notifications before 80, 60, 55, 43 and 5 in \
-1 hour 10 minutes"
-   "TODO event scheduled on 16:00 with deadline at 17:00 in \
-1 hour 10 minutes"))
+  ("event with raw date at 16:00 at 16:00 (in 1 hour 10 minutes)"
+   "TODO event at 16:00 with NOTIFY_BEFORE property set to 31 at 16:00 (in \
+1 hour 10 minutes)"
+   "TODO event at 16:00 with notifications before 80, 60, 55, 43 and 5 at 16:00 (in \
+1 hour 10 minutes)"
+   "TODO event scheduled on 16:00 with deadline at 17:00 at 16:00 (in \
+1 hour 10 minutes)"))
 
 (org-wild-notifier-test alert-time-overriden-with-list
   "Test that standard alert time can be customized & set to list"
   :time "14:50"
   :overrides ((org-wild-notifier-alert-time '(10 70)))
   :expected-alerts
-  ("event with raw date at 16:00 in 1 hour 10 minutes"
-   "TODO event at 16:00 with NOTIFY_BEFORE property set to 31 in \
-1 hour 10 minutes"
-   "TODO event at 16:00 with notifications before 80, 60, 55, 43 and 5 in \
-1 hour 10 minutes"
-   "TODO event scheduled on 16:00 with deadline at 17:00 in \
-1 hour 10 minutes"
-   "TODO event at 15:00 in 10 minutes"))
+  ("event with raw date at 16:00 at 16:00 (in 1 hour 10 minutes)"
+   "TODO event at 16:00 with NOTIFY_BEFORE property set to 31 at 16:00 (in \
+1 hour 10 minutes)"
+   "TODO event at 16:00 with notifications before 80, 60, 55, 43 and 5 at 16:00 (in \
+1 hour 10 minutes)"
+   "TODO event scheduled on 16:00 with deadline at 17:00 at 16:00 (in \
+1 hour 10 minutes)"
+   "TODO event at 15:00 at 15:00 (in 10 minutes)"))
 
 (org-wild-notifier-test notification-property
   "Tests that notifier takes in account the notification property"
   :time "15:17"
   :expected-alerts
   ("TODO event at 16:00 with notifications before \
-80, 60, 55, 43 and 5 in 43 minutes"))
+80, 60, 55, 43 and 5 at 16:00 (in 43 minutes)"))
 
 (org-wild-notifier-test notification-property-overriden
   "Tests that it is possible to customize the notification property"
   :time "15:29"
   :overrides ((org-wild-notifier-alert-times-property "NOTIFY_BEFORE"))
   :expected-alerts
-  ("TODO event at 16:00 with NOTIFY_BEFORE property set to 31 in 31 minutes"))
+  ("TODO event at 16:00 with NOTIFY_BEFORE property set to 31 at 16:00 (in 31 minutes)"))
 
 (org-wild-notifier-test message-within-one-minute
   "Tests that message is correct"
   :time "14:59"
   :overrides ((org-wild-notifier-alert-time 1))
   :expected-alerts
-  ("TODO event at 15:00 in 1 minute"))
+  ("TODO event at 15:00 at 15:00 (in 1 minute)"))
 
 (org-wild-notifier-test day-wide-events
   "Tests that user receives notifications on day-wide (w/o specified time) \
@@ -123,45 +123,45 @@ events"
   :time "14:59"
   :overrides ((org-wild-notifier--day-wide-events t))
   :expected-alerts
-  ("TODO event scheduled on today today"))
+  ("TODO event scheduled on today at 00:00 (right now)"))
 
 (org-wild-notifier-test next-day-events
   "Tests that user receives notifications on next day events"
   :time "23:50"
   :expected-alerts
-  ("TODO event scheduled on tomorrow in 10 minutes"))
+  ("TODO event scheduled on tomorrow at 00:00 (in 10 minutes)"))
 
 (org-wild-notifier-test keyword-whitelist
   "Tests that whitelist option filters out events."
   :time "15:50"
   :expected-alerts
-  ("event with raw date at 16:00 in 10 minutes"
-   "TODO event at 16:00 with NOTIFY_BEFORE property set to 31 in 10 minutes"
-   "TODO event at 16:00 with notifications before 80, 60, 55, 43 and 5 in 10 \
-minutes"
-   "TODO event scheduled on 16:00 with deadline at 17:00 in 10 minutes"))
+  ("event with raw date at 16:00 at 16:00 (in 10 minutes)"
+   "TODO event at 16:00 with NOTIFY_BEFORE property set to 31 at 16:00 (in 10 minutes)"
+   "TODO event at 16:00 with notifications before 80, 60, 55, 43 and 5 at 16:00 (in 10 \
+minutes)"
+   "TODO event scheduled on 16:00 with deadline at 17:00 at 16:00 (in 10 minutes)"))
 
 (org-wild-notifier-test keyword-whitelist-disabled
   "Tests that whitelist option can be disabled"
   :time "15:50"
   :overrides ((org-wild-notifier-keyword-whitelist nil))
   :expected-alerts
-  ("event with raw date at 16:00 in 10 minutes"
-   "TODO event at 16:00 with NOTIFY_BEFORE property set to 31 in 10 minutes"
-   "TODO event at 16:00 with notifications before 80, 60, 55, 43 and 5 in 10 minutes"
-   "TODO event scheduled on 16:00 with deadline at 17:00 in 10 minutes"
-   "Tagged event at 16:00 in 10 minutes"
-   "Plain event at 16:00 in 10 minutes"
-   "IN PROGRESS event at 16:00 in 10 minutes"
-   "DONE event at 16:00 in 10 minutes"))
+  ("event with raw date at 16:00 at 16:00 (in 10 minutes)"
+   "TODO event at 16:00 with NOTIFY_BEFORE property set to 31 at 16:00 (in 10 minutes)"
+   "TODO event at 16:00 with notifications before 80, 60, 55, 43 and 5 at 16:00 (in 10 minutes)"
+   "TODO event scheduled on 16:00 with deadline at 17:00 at 16:00 (in 10 minutes)"
+   "Tagged event at 16:00 at 16:00 (in 10 minutes)"
+   "Plain event at 16:00 at 16:00 (in 10 minutes)"
+   "IN PROGRESS event at 16:00 at 16:00 (in 10 minutes)"
+   "DONE event at 16:00 at 16:00 (in 10 minutes)"))
 
 (org-wild-notifier-test keyword-whitelist-with-two-items
   "Tests that whitelist option can contain more than one items"
   :time "15:50"
   :overrides ((org-wild-notifier-keyword-whitelist '("IN PROGRESS" "DONE")))
   :expected-alerts
-  ("IN PROGRESS event at 16:00 in 10 minutes"
-   "DONE event at 16:00 in 10 minutes"))
+  ("IN PROGRESS event at 16:00 at 16:00 (in 10 minutes)"
+   "DONE event at 16:00 at 16:00 (in 10 minutes)"))
 
 (org-wild-notifier-test keyword-blacklist
   "Tests that blacklist option filters out events."
@@ -169,9 +169,9 @@ minutes"
   :overrides ((org-wild-notifier-keyword-whitelist '())
               (org-wild-notifier-keyword-blacklist '("TODO" "DONE")))
   :expected-alerts
-  ("Tagged event at 16:00 in 10 minutes"
-   "Plain event at 16:00 in 10 minutes"
-   "IN PROGRESS event at 16:00 in 10 minutes"))
+  ("Tagged event at 16:00 at 16:00 (in 10 minutes)"
+   "Plain event at 16:00 at 16:00 (in 10 minutes)"
+   "IN PROGRESS event at 16:00 at 16:00 (in 10 minutes)"))
 
 (org-wild-notifier-test tags-whitelist
   "Tests that whitelist option filters out events."
@@ -179,7 +179,7 @@ minutes"
   :overrides ((org-wild-notifier-tags-whitelist '("bar"))
               (org-wild-notifier-keyword-whitelist '()))
   :expected-alerts
-  ("Tagged event at 16:00 in 10 minutes"))
+  ("Tagged event at 16:00 at 16:00 (in 10 minutes)"))
 
 (org-wild-notifier-test two-tags-whitelist
   "Tests that whitelist option filters out events."
@@ -187,8 +187,8 @@ minutes"
   :overrides ((org-wild-notifier-tags-whitelist '("bar" "baz"))
               (org-wild-notifier-keyword-whitelist '()))
   :expected-alerts
-  ("event with raw date at 16:00 in 10 minutes"
-   "Tagged event at 16:00 in 10 minutes"))
+  ("event with raw date at 16:00 at 16:00 (in 10 minutes)"
+   "Tagged event at 16:00 at 16:00 (in 10 minutes)"))
 
 (org-wild-notifier-test mixed-whitelist
   "Tests that whitelist option filters out events."
@@ -196,9 +196,9 @@ minutes"
   :overrides ((org-wild-notifier-tags-whitelist '("bar" "baz"))
               (org-wild-notifier-keyword-whitelist '("IN PROGRESS")))
   :expected-alerts
-  ("event with raw date at 16:00 in 10 minutes"
-   "Tagged event at 16:00 in 10 minutes"
-   "IN PROGRESS event at 16:00 in 10 minutes"))
+  ("event with raw date at 16:00 at 16:00 (in 10 minutes)"
+   "Tagged event at 16:00 at 16:00 (in 10 minutes)"
+   "IN PROGRESS event at 16:00 at 16:00 (in 10 minutes)"))
 
 (org-wild-notifier-test mixed-tags-whitelist-blacklist
   "Tests that blacklist option filters out events."
@@ -207,14 +207,14 @@ minutes"
               (org-wild-notifier-tags-whitelist '("baz"))
               (org-wild-notifier-tags-blacklist '("foo")))
   :expected-alerts
-  ("event with raw date at 16:00 in 10 minutes"))
+  ("event with raw date at 16:00 at 16:00 (in 10 minutes)"))
 
 (org-wild-notifier-test event-without-a-keyword
   "Tests that blacklist option filters out events."
   :time "19:25"
   :overrides ((org-wild-notifier-keyword-whitelist '()))
   :expected-alerts
-  ("event without a keyword at 19:35 in 10 minutes"))
+  ("event without a keyword at 19:35 at 19:35 (in 10 minutes)"))
 
 (org-wild-notifier-test non-existent-fixture
   "Tests that it doesn't hang if there's a non-existent agenda file."
