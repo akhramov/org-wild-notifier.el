@@ -75,6 +75,12 @@ to an event."
   :group 'org-wild-notifier
   :type 'string)
 
+(defcustom org-wild-notifier-notification-icon nil
+  "Path to notification icon file."
+  :package-version '(org-wild-notifier . "0.4.1")
+  :group 'org-wild-notifier
+  :type 'string)
+
 (defcustom org-wild-notifier-keyword-whitelist '("TODO")
   "Receive notifications for these keywords only.
 Leave this variable blank if you do not want to filter anything."
@@ -275,7 +281,10 @@ Returns a list of notification messages"
 (defun org-wild-notifier--notify (event-msg)
   "Notify about an event using `alert' library.
 EVENT-MSG is a string representation of the event."
-  (alert event-msg :title org-wild-notifier-notification-title :severity org-wild-notifier--alert-severity))
+  (alert event-msg
+	 :icon org-wild-notifier-notification-icon
+	 :title org-wild-notifier-notification-title
+	 :severity org-wild-notifier--alert-severity))
 
 (defun org-wild-notifier--extract-time (marker)
   "Extract timestamps from MARKER.
