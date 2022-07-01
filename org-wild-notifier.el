@@ -55,7 +55,7 @@
   :group 'org)
 
 (defcustom org-wild-notifier-alert-time '(10)
-  "Time in minutes to get a notification about upcomming event.
+  "Time in minutes to get a notification about upcoming event.
 Cannot be less than 1."
   :package-version '(org-wild-notifier . "0.1.0")
   :group 'org-wild-notifier
@@ -342,7 +342,7 @@ smoother experience this function also runs a check without timer."
 
 ;;;###autoload
 (defun org-wild-notifier-check ()
-  "Parse agenda view and notify about upcomming events."
+  "Parse agenda view and notify about upcoming events."
   (interactive)
 
   (async-start
