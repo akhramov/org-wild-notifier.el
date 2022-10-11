@@ -253,8 +253,7 @@ Returns a list of notification messages"
         (tags-whitelist org-wild-notifier-tags-whitelist)
         (tags-blacklist org-wild-notifier-tags-blacklist))
     (lambda ()
-      (let ((org-agenda-use-time-grid nil)
-            (org-agenda-compact-blocks t))
+      (let ((entries))
         (setf org-agenda-files agenda-files)
         (setf load-path my-load-path)
         (setf org-wild-notifier-alert-time alert-time)
@@ -266,13 +265,14 @@ Returns a list of notification messages"
         (package-initialize)
         (require 'org-wild-notifier)
 
-        (org-agenda-list 2
-                         (org-read-date nil nil "today"))
-
-        (->> (org-split-string (buffer-string) "\n")
-             (--map (plist-get
-                     (org-fix-agenda-info (text-properties-at 0 it))
-                     'org-marker))
+        (--map
+         (org-map-entries
+          (lambda ()
+            (push (org-entry-properties) entries))
+          (format "%s>\"<today>\"+%s<\"<+2d>\"" it it)
+          'agenda)
+         '("DEADLINE" "SCHEDULED" "TIMESTAMP"))
+        (->> entries
              (-non-nil)
              (org-wild-notifier--apply-whitelist)
              (org-wild-notifier--apply-blacklist)
@@ -286,42 +286,37 @@ EVENT-MSG is a string representation of the event."
 	 :title org-wild-notifier-notification-title
 	 :severity org-wild-notifier--alert-severity))
 
-(defun org-wild-notifier--extract-time (marker)
-  "Extract timestamps from MARKER.
+(defun org-wild-notifier--extract-time (event)
+  "Extract timestamps from EVENT.
 Timestamps are extracted as cons cells.  car holds org-formatted
 string, cdr holds time in list-of-integer format."
   (-non-nil
    (--map
-    (let ((org-timestamp (org-entry-get marker it)))
+    (let ((org-timestamp (cdr (assoc it event))))
       (and org-timestamp
            (cons org-timestamp
                  (apply 'encode-time (org-parse-time-string org-timestamp)))))
     '("DEADLINE" "SCHEDULED" "TIMESTAMP"))))
 
-(defun org-wild-notifier--extract-title (marker)
-  "Extract event title from MARKER.
+(defun org-wild-notifier--extract-title (event)
+  "Extract event title from EVENT.
 MARKER acts like the event's identifier."
-  (org-with-point-at marker
-    (-let (((_lvl _reduced-lvl _todo _priority title _tags)
-            (org-heading-components)))
-      title)))
+  (cdr (assoc "ITEM" event)))
 
-(defun org-wild-notifier--extract-notication-intervals (marker)
+(defun org-wild-notifier--extract-notication-intervals (event)
   "Extract notification intervals from the event's properties.
-MARKER acts like the event's identifier.  Resulting list also contains
-standard notification interval (`org-wild-notifier-alert-time')."
+Resulting list also contains standard notification
+interval (`org-wild-notifier-alert-time')."
   `(,@(-flatten (list org-wild-notifier-alert-time))
     ,@(-map 'string-to-number
-           (org-entry-get-multivalued-property
-            marker
-            org-wild-notifier-alert-times-property))))
+            (cdr (assoc org-wild-notifier-alert-times-property event)))))
 
-(defun org-wild-notifier--gather-info (marker)
-  "Collect information about an event.
-MARKER acts like event's identifier."
-  `((times . (,(org-wild-notifier--extract-time marker)))
-    (title . ,(org-wild-notifier--extract-title marker))
-    (intervals . ,(org-wild-notifier--extract-notication-intervals marker))))
+(defun org-wild-notifier--gather-info (event)
+  "Collect information about an event."
+  `((times . (,(org-wild-notifier--extract-time event)))
+    (title . ,(org-wild-notifier--extract-title event))
+    (intervals . ,(org-wild-notifier--extract-notication-intervals event))
+    (event . ,event)))
 
 (defun org-wild-notifier--stop ()
   "Stops the notification timer."
