@@ -56,7 +56,7 @@
 
 (defcustom org-wild-notifier-alert-time '(10)
   "Time in minutes to get a notification about upcoming event.
-Cannot be less than 1."
+Must be interger greater than or equal to 0."
   :package-version '(org-wild-notifier . "0.1.0")
   :group 'org-wild-notifier
   :type '(choice (integer :tag "Notify once")
@@ -124,15 +124,8 @@ options: 'high 'medium 'low"
 (defvar org-wild-notifier--agenda-buffer-name "*org wild notifier affairs*"
   "A name for temporary 'org-agenda' buffer.")
 
-(defun org-wild-notifier--time= (&rest list)
-  "Compare timestamps.
-Comparison is performed by converted each element of LIST onto string
-in order to ignore seconds."
-  (->> list
-       (--map (format-time-string "%d:%H:%M" it))
-       (-uniq)
-       (length)
-       (= 1)))
+(defvar org-wild-notifier--last-check-time (seconds-to-time 0)
+  "Last time checked for events.")
 
 (defun org-wild-notifier--today ()
   "Get the timestamp for the beginning of current day."
@@ -149,11 +142,13 @@ For now, the only case that handled is day-wide events."
       (--any-p (and (<= (length (car it)) 16) (equal today (cdr it)))
                (cadr (assoc 'times event))))))
 
-(defun org-wild-notifier--timestamp-within-interval-p (timestamp interval)
-  "Check whether TIMESTAMP is within notification INTERVAL."
-  (org-wild-notifier--time=
-   (time-add (current-time) (seconds-to-time (* 60 interval)))
-   timestamp))
+(defun org-wild-notifier--ts-within-interval-p (ts target interval)
+  (not (or (time-less-p target ts)
+           (time-less-p ts (time-subtract target (seconds-to-time (* 60 (+ interval 1))))))))
+
+(defun org-wild-notifier--ts-notify-p (last-time cur-time ts interval)
+  (and (not (org-wild-notifier--ts-within-interval-p last-time ts interval))
+       (org-wild-notifier--ts-within-interval-p cur-time ts interval)))
 
 (defun org-wild-notifier--notifications (event)
   "Get notifications for given EVENT.
@@ -161,10 +156,13 @@ Returns a list of notification intervals."
   (if (org-wild-notifier--always-notify-p event)
       '(-1)
 
-    (->> `(,(cadr (assoc 'times event)) ,(cdr (assoc 'intervals event)))
-         (apply '-table-flat (lambda (ts int) `(,(cdr ts) ,int)))
-         (--filter (apply 'org-wild-notifier--timestamp-within-interval-p it))
-         (-map 'cadr))))
+    (let ((last-time org-wild-notifier--last-check-time)
+          (cur-time (current-time)))
+      (setq org-wild-notifier--last-check-time cur-time)
+      (->> `(,(cadr (assoc 'times event)) ,(cdr (assoc 'intervals event)))
+           (apply '-table-flat (lambda (ts int) `(,(cdr ts) ,int)))
+           (--filter (apply 'org-wild-notifier--ts-notify-p last-time cur-time it))
+           (-map 'cadr)))))
 
 (defun org-wild-notifier--time-left (seconds)
   "Human-friendly representation for SECONDS."
