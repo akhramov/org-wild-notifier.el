@@ -158,7 +158,6 @@ Returns a list of notification intervals."
 
     (let ((last-time org-wild-notifier--last-check-time)
           (cur-time (current-time)))
-      (setq org-wild-notifier--last-check-time cur-time)
       (->> `(,(cadr (assoc 'times event)) ,(cdr (assoc 'intervals event)))
            (apply '-table-flat (lambda (ts int) `(,(cdr ts) ,int)))
            (--filter (apply 'org-wild-notifier--ts-notify-p last-time cur-time it))
@@ -346,7 +345,8 @@ smoother experience this function also runs a check without timer."
               (-map 'org-wild-notifier--check-event)
               (-flatten)
               (-uniq))
-       'org-wild-notifier--notify))))
+       'org-wild-notifier--notify)
+     (setq org-wild-notifier--last-check-time (current-time)))))
 
 ;;;###autoload
 (define-minor-mode org-wild-notifier-mode
