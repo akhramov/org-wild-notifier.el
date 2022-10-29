@@ -121,6 +121,9 @@ options: 'high 'medium 'low"
 (defvar org-wild-notifier--timer nil
   "Timer value.")
 
+(defvar org-wild-notifier--process nil
+  "Currently-running async process.")
+
 (defvar org-wild-notifier--agenda-buffer-name "*org wild notifier affairs*"
   "A name for temporary 'org-agenda' buffer.")
 
@@ -315,8 +318,11 @@ interval (`org-wild-notifier-alert-time')."
     (event . ,event)))
 
 (defun org-wild-notifier--stop ()
-  "Stops the notification timer."
-  (-some-> org-wild-notifier--timer (cancel-timer)))
+  "Stops the notification timer and cancel any in-progress checks."
+  (-some-> org-wild-notifier--timer (cancel-timer))
+  (when org-wild-notifier--process
+    (interrupt-process org-wild-notifier--process)
+    (setq org-wild-notifier--process nil)))
 
 (defun org-wild-notifier--start ()
   "Start the notification timer.  Cancel old one, if any.
@@ -333,19 +339,25 @@ smoother experience this function also runs a check without timer."
 
 ;;;###autoload
 (defun org-wild-notifier-check ()
-  "Parse agenda view and notify about upcoming events."
+  "Parse agenda view and notify about upcoming events.
+
+Do nothing if a check is already in progress in the background."
   (interactive)
 
-  (async-start
-   (org-wild-notifier--retrieve-events)
-   (lambda (events)
-     (-each
-         (->> events
-              (-map 'org-wild-notifier--check-event)
-              (-flatten)
-              (-uniq))
-       'org-wild-notifier--notify)
-     (setq org-wild-notifier--last-check-time (current-time)))))
+  (unless (and org-wild-notifier--process
+               (process-live-p org-wild-notifier--process))
+    (setq org-wild-notifier--process
+          (async-start
+           (org-wild-notifier--retrieve-events)
+           (lambda (events)
+             (setq org-wild-notifier--process nil)
+             (-each
+                 (->> events
+                      (-map 'org-wild-notifier--check-event)
+                      (-flatten)
+                      (-uniq))
+               'org-wild-notifier--notify)
+             (setq org-wild-notifier--last-check-time (current-time)))))))
 
 ;;;###autoload
 (define-minor-mode org-wild-notifier-mode
