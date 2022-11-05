@@ -56,7 +56,7 @@
 
 (defcustom org-wild-notifier-alert-time '(10)
   "Time in minutes to get a notification about upcoming event.
-Must be interger greater than or equal to 0."
+Cannot be less than 1."
   :package-version '(org-wild-notifier . "0.1.0")
   :group 'org-wild-notifier
   :type '(choice (integer :tag "Notify once")
@@ -145,13 +145,11 @@ For now, the only case that handled is day-wide events."
       (--any-p (and (<= (length (car it)) 16) (equal today (cdr it)))
                (cadr (assoc 'times event))))))
 
-(defun org-wild-notifier--ts-within-interval-p (ts target interval)
-  (not (or (time-less-p target ts)
-           (time-less-p ts (time-subtract target (seconds-to-time (* 60 (+ interval 1))))))))
-
-(defun org-wild-notifier--ts-notify-p (last-time cur-time ts interval)
-  (and (not (org-wild-notifier--ts-within-interval-p last-time ts interval))
-       (org-wild-notifier--ts-within-interval-p cur-time ts interval)))
+(defun org-wild-notifier--timestamp-within-interval-p (timestamp interval)
+  "Check whether TIMESTAMP is within notification INTERVAL."
+  (org-wild-notifier--time=
+   (time-add (current-time) (seconds-to-time (* 60 interval)))
+   timestamp))
 
 (defun org-wild-notifier--notifications (event)
   "Get notifications for given EVENT.
@@ -159,12 +157,10 @@ Returns a list of notification intervals."
   (if (org-wild-notifier--always-notify-p event)
       '(-1)
 
-    (let ((last-time org-wild-notifier--last-check-time)
-          (cur-time (current-time)))
-      (->> `(,(cadr (assoc 'times event)) ,(cdr (assoc 'intervals event)))
-           (apply '-table-flat (lambda (ts int) `(,(cdr ts) ,int)))
-           (--filter (apply 'org-wild-notifier--ts-notify-p last-time cur-time it))
-           (-map 'cadr)))))
+    (->> `(,(cadr (assoc 'times event)) ,(cdr (assoc 'intervals event)))
+         (apply '-table-flat (lambda (ts int) `(,(cdr ts) ,int)))
+         (--filter (apply 'org-wild-notifier--timestamp-within-interval-p it))
+         (-map 'cadr))))
 
 (defun org-wild-notifier--time-left (seconds)
   "Human-friendly representation for SECONDS."
@@ -196,9 +192,9 @@ Returns a list of notification messages"
        (--zip-with (cons (car it) other) (cadr (assoc 'times event)))
        (--map (org-wild-notifier--notification-text it event))))
 
-(defun org-wild-notifier--get-tags (event)
-  "Retrieve tags of EVENT."
-  (-> (assoc "ALLTAGS" event)
+(defun org-wild-notifier--get-tags (marker)
+  "Retrieve tags of MARKER."
+  (-> (org-entry-get marker "TAGS")
       (or "")
       (org-split-string  ":")))
 
@@ -206,7 +202,7 @@ Returns a list of notification messages"
   (->> `([,org-wild-notifier-keyword-whitelist
           (lambda (it)
             (-contains-p org-wild-notifier-keyword-whitelist
-                         (assoc "TODO" it)))]
+                         (org-entry-get it "TODO")))]
 
          [,org-wild-notifier-tags-whitelist
           (lambda (it)
@@ -219,7 +215,7 @@ Returns a list of notification messages"
   (->> `([,org-wild-notifier-keyword-blacklist
           (lambda (it)
             (-contains-p org-wild-notifier-keyword-blacklist
-                         (assoc "TODO" it)))]
+                         (org-entry-get it "TODO")))]
 
          [,org-wild-notifier-tags-blacklist
           (lambda (it)
@@ -228,19 +224,19 @@ Returns a list of notification messages"
        (--filter (aref it 0))
        (--map (aref it 1))))
 
-(defun org-wild-notifier--apply-whitelist (events)
-  "Apply whitelist to EVENTS."
+(defun org-wild-notifier--apply-whitelist (markers)
+  "Apply whitelist to MARKERS."
   (-if-let (whitelist-predicates (org-wild-notifier--whitelist-predicates))
       (-> (apply '-orfn whitelist-predicates)
-          (-filter events))
-    events))
+          (-filter markers))
+    markers))
 
-(defun org-wild-notifier--apply-blacklist (events)
-  "Apply blacklist to EVENTS."
+(defun org-wild-notifier--apply-blacklist (markers)
+  "Apply blacklist to MARKERS."
   (-if-let (blacklist-predicates (org-wild-notifier--blacklist-predicates))
       (-> (apply '-orfn blacklist-predicates)
-          (-remove events))
-    events))
+          (-remove markers))
+    markers))
 
 (defun org-wild-notifier--retrieve-events ()
   "Get events from agenda view."
@@ -253,7 +249,8 @@ Returns a list of notification messages"
         (tags-whitelist org-wild-notifier-tags-whitelist)
         (tags-blacklist org-wild-notifier-tags-blacklist))
     (lambda ()
-      (let ((entries))
+      (let ((org-agenda-use-time-grid nil)
+            (org-agenda-compact-blocks t))
         (setf org-agenda-files agenda-files)
         (setf load-path my-load-path)
         (setf org-wild-notifier-alert-time alert-time)
@@ -265,14 +262,13 @@ Returns a list of notification messages"
         (package-initialize)
         (require 'org-wild-notifier)
 
-        (--map
-         (org-map-entries
-          (lambda ()
-            (push (org-entry-properties) entries))
-          (format "%s>\"<today>\"+%s<\"<+2d>\"" it it)
-          'agenda)
-         '("DEADLINE" "SCHEDULED" "TIMESTAMP"))
-        (->> entries
+        (org-agenda-list 2
+                         (org-read-date nil nil "today"))
+
+        (->> (org-split-string (buffer-string) "\n")
+             (--map (plist-get
+                     (org-fix-agenda-info (text-properties-at 0 it))
+                     'org-marker))
              (-non-nil)
              (org-wild-notifier--apply-whitelist)
              (org-wild-notifier--apply-blacklist)
@@ -286,36 +282,42 @@ EVENT-MSG is a string representation of the event."
 	 :title org-wild-notifier-notification-title
 	 :severity org-wild-notifier--alert-severity))
 
-(defun org-wild-notifier--extract-time (event)
-  "Extract timestamps from EVENT.
+(defun org-wild-notifier--extract-time (marker)
+  "Extract timestamps from MARKER.
 Timestamps are extracted as cons cells.  car holds org-formatted
 string, cdr holds time in list-of-integer format."
   (-non-nil
    (--map
-    (let ((org-timestamp (cdr (assoc it event))))
+    (let ((org-timestamp (org-entry-get marker it)))
       (and org-timestamp
            (cons org-timestamp
                  (apply 'encode-time (org-parse-time-string org-timestamp)))))
     '("DEADLINE" "SCHEDULED" "TIMESTAMP"))))
 
-(defun org-wild-notifier--extract-title (event)
-  "Extract event title from EVENT."
-  (cdr (assoc "ITEM" event)))
+(defun org-wild-notifier--extract-title (marker)
+  "Extract event title from MARKER.
+MARKER acts like the event's identifier."
+  (org-with-point-at marker
+    (-let (((_lvl _reduced-lvl _todo _priority title _tags)
+            (org-heading-components)))
+      title)))
 
-(defun org-wild-notifier--extract-notication-intervals (event)
+(defun org-wild-notifier--extract-notication-intervals (marker)
   "Extract notification intervals from the event's properties.
-Resulting list also contains standard notification
-interval (`org-wild-notifier-alert-time')."
+MARKER acts like the event's identifier.  Resulting list also contains
+standard notification interval (`org-wild-notifier-alert-time')."
   `(,@(-flatten (list org-wild-notifier-alert-time))
     ,@(-map 'string-to-number
-            (cdr (assoc org-wild-notifier-alert-times-property event)))))
+           (org-entry-get-multivalued-property
+            marker
+            org-wild-notifier-alert-times-property))))
 
-(defun org-wild-notifier--gather-info (event)
-  "Collect information about an event."
-  `((times . (,(org-wild-notifier--extract-time event)))
-    (title . ,(org-wild-notifier--extract-title event))
-    (intervals . ,(org-wild-notifier--extract-notication-intervals event))
-    (event . ,event)))
+(defun org-wild-notifier--gather-info (marker)
+  "Collect information about an event.
+MARKER acts like event's identifier."
+  `((times . (,(org-wild-notifier--extract-time marker)))
+    (title . ,(org-wild-notifier--extract-title marker))
+    (intervals . ,(org-wild-notifier--extract-notication-intervals marker))))
 
 (defun org-wild-notifier--stop ()
   "Stops the notification timer and cancel any in-progress checks."
