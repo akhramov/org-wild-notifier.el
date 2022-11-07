@@ -130,6 +130,16 @@ options: 'high 'medium 'low"
 (defvar org-wild-notifier--last-check-time (seconds-to-time 0)
   "Last time checked for events.")
 
+(defun org-wild-notifier--time= (&rest list)
+  "Compare timestamps.
+Comparison is performed by converted each element of LIST onto string
+in order to ignore seconds."
+  (->> list
+       (--map (format-time-string "%d:%H:%M" it))
+       (-uniq)
+       (length)
+       (= 1)))
+
 (defun org-wild-notifier--today ()
   "Get the timestamp for the beginning of current day."
   (apply 'encode-time
