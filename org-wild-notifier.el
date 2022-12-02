@@ -253,6 +253,7 @@ Returns a list of notification messages"
   (let ((agenda-files (-filter 'file-exists-p (org-agenda-files)))
         ;; Some package managers manipulate `load-path` variable.
         (my-load-path load-path)
+        (todo-keywords org-todo-keywords)
         (alert-time org-wild-notifier-alert-time)
         (keyword-whitelist org-wild-notifier-keyword-whitelist)
         (keyword-blacklist org-wild-notifier-keyword-blacklist)
@@ -263,6 +264,7 @@ Returns a list of notification messages"
             (org-agenda-compact-blocks t))
         (setf org-agenda-files agenda-files)
         (setf load-path my-load-path)
+        (setf org-todo-keywords todo-keywords)
         (setf org-wild-notifier-alert-time alert-time)
         (setf org-wild-notifier-keyword-whitelist keyword-whitelist)
         (setf org-wild-notifier-keyword-blacklist keyword-blacklist)
