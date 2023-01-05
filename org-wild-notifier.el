@@ -107,6 +107,23 @@ Leave this variable blank if you do not want to filter anything."
   :group 'org-wild-notifier
   :type '(repeat string))
 
+(defcustom org-wild-notifier-predicate-whitelist nil
+  "Receive notifications for events matching these predicates only.
+Each function should take an event POM and return non-nil iff that event should
+trigger a notification. Leave this variable blank if you do not want to filter
+anything."
+  :package-version '(org-wild-notifier . "0.5.0")
+  :group 'org-wild-notifier
+  :type '(function))
+
+(defcustom org-wild-notifier-predicate-blacklist nil
+  "Never receive notifications for events matching these predicates.
+Each function should take an event POM and return non-nil iff that event should
+not trigger a notification."
+  :package-version '(org-wild-notifier . "0.5.0")
+  :group 'org-wild-notifier
+  :type '(function))
+
 (defcustom org-wild-notifier--alert-severity 'medium
   "Severity of the alert.
 options: 'high 'medium 'low"
@@ -217,7 +234,11 @@ Returns a list of notification messages"
          [,org-wild-notifier-tags-whitelist
           (lambda (it)
             (-intersection org-wild-notifier-tags-whitelist
-                           (org-wild-notifier--get-tags it)))])
+                           (org-wild-notifier--get-tags it)))]
+
+         [,org-wild-notifier-predicate-whitelist
+          (lambda (marker)
+            (--some? (funcall it marker) org-wild-notifier-predicate-whitelist))])
        (--filter (aref it 0))
        (--map (aref it 1))))
 
@@ -230,7 +251,11 @@ Returns a list of notification messages"
          [,org-wild-notifier-tags-blacklist
           (lambda (it)
             (-intersection org-wild-notifier-tags-blacklist
-                           (org-wild-notifier--get-tags it)))])
+                           (org-wild-notifier--get-tags it)))]
+
+         [,org-wild-notifier-predicate-blacklist
+          (lambda (marker)
+            (--some? (funcall it marker) org-wild-notifier-predicate-blacklist))])
        (--filter (aref it 0))
        (--map (aref it 1))))
 
@@ -258,7 +283,9 @@ Returns a list of notification messages"
         (keyword-whitelist org-wild-notifier-keyword-whitelist)
         (keyword-blacklist org-wild-notifier-keyword-blacklist)
         (tags-whitelist org-wild-notifier-tags-whitelist)
-        (tags-blacklist org-wild-notifier-tags-blacklist))
+        (tags-blacklist org-wild-notifier-tags-blacklist)
+        (predicate-whitelist org-wild-notifier-predicate-whitelist)
+        (predicate-blacklist org-wild-notifier-predicate-blacklist))
     (lambda ()
       (setf org-agenda-use-time-grid nil)
       (setf org-agenda-compact-blocks t)
@@ -270,6 +297,8 @@ Returns a list of notification messages"
       (setf org-wild-notifier-keyword-blacklist keyword-blacklist)
       (setf org-wild-notifier-tags-whitelist tags-whitelist)
       (setf org-wild-notifier-tags-blacklist tags-blacklist)
+      (setf org-wild-notifier-predicate-whitelist predicate-whitelist)
+      (setf org-wild-notifier-predicate-blacklist predicate-blacklist)
 
       (package-initialize)
       (require 'org-wild-notifier)
