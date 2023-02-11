@@ -290,9 +290,9 @@ Returns a list of notification messages"
   "Notify about an event using `alert' library.
 EVENT-MSG is a string representation of the event."
   (alert event-msg
-	 :icon org-wild-notifier-notification-icon
-	 :title org-wild-notifier-notification-title
-	 :severity org-wild-notifier--alert-severity))
+         :icon org-wild-notifier-notification-icon
+         :title org-wild-notifier-notification-title
+         :severity org-wild-notifier--alert-severity))
 
 (defun org-wild-notifier--extract-time (marker)
   "Extract timestamps from MARKER.
@@ -361,17 +361,18 @@ Do nothing if a check is already in progress in the background."
   (unless (and org-wild-notifier--process
                (process-live-p org-wild-notifier--process))
     (setq org-wild-notifier--process
-          (async-start
-           (org-wild-notifier--retrieve-events)
-           (lambda (events)
-             (setq org-wild-notifier--process nil)
-             (-each
-                 (->> events
-                      (-map 'org-wild-notifier--check-event)
-                      (-flatten)
-                      (-uniq))
-               'org-wild-notifier--notify)
-             (setq org-wild-notifier--last-check-time (current-time)))))))
+          (let ((default-directory user-emacs-directory))
+            (async-start
+             (org-wild-notifier--retrieve-events)
+             (lambda (events)
+               (setq org-wild-notifier--process nil)
+               (-each
+                   (->> events
+                        (-map 'org-wild-notifier--check-event)
+                        (-flatten)
+                        (-uniq))
+                 'org-wild-notifier--notify)
+               (setq org-wild-notifier--last-check-time (current-time))))))))
 
 ;;;###autoload
 (define-minor-mode org-wild-notifier-mode
