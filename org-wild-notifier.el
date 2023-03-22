@@ -260,31 +260,31 @@ Returns a list of notification messages"
         (tags-whitelist org-wild-notifier-tags-whitelist)
         (tags-blacklist org-wild-notifier-tags-blacklist))
     (lambda ()
-      (let ((org-agenda-use-time-grid nil)
-            (org-agenda-compact-blocks t))
-        (setf org-agenda-files agenda-files)
-        (setf load-path my-load-path)
-        (setf org-todo-keywords todo-keywords)
-        (setf org-wild-notifier-alert-time alert-time)
-        (setf org-wild-notifier-keyword-whitelist keyword-whitelist)
-        (setf org-wild-notifier-keyword-blacklist keyword-blacklist)
-        (setf org-wild-notifier-tags-whitelist tags-whitelist)
-        (setf org-wild-notifier-tags-blacklist tags-blacklist)
+      (setf org-agenda-use-time-grid nil)
+      (setf org-agenda-compact-blocks t)
+      (setf org-agenda-files agenda-files)
+      (setf load-path my-load-path)
+      (setf org-todo-keywords todo-keywords)
+      (setf org-wild-notifier-alert-time alert-time)
+      (setf org-wild-notifier-keyword-whitelist keyword-whitelist)
+      (setf org-wild-notifier-keyword-blacklist keyword-blacklist)
+      (setf org-wild-notifier-tags-whitelist tags-whitelist)
+      (setf org-wild-notifier-tags-blacklist tags-blacklist)
 
-        (package-initialize)
-        (require 'org-wild-notifier)
+      (package-initialize)
+      (require 'org-wild-notifier)
 
-        (org-agenda-list 2
-                         (org-read-date nil nil "today"))
+      (org-agenda-list 2
+                       (org-read-date nil nil "today"))
 
-        (->> (org-split-string (buffer-string) "\n")
-             (--map (plist-get
-                     (org-fix-agenda-info (text-properties-at 0 it))
-                     'org-marker))
-             (-non-nil)
-             (org-wild-notifier--apply-whitelist)
-             (org-wild-notifier--apply-blacklist)
-             (-map 'org-wild-notifier--gather-info))))))
+      (->> (org-split-string (buffer-string) "\n")
+           (--map (plist-get
+                   (org-fix-agenda-info (text-properties-at 0 it))
+                   'org-marker))
+           (-non-nil)
+           (org-wild-notifier--apply-whitelist)
+           (org-wild-notifier--apply-blacklist)
+           (-map 'org-wild-notifier--gather-info)))))
 
 (defun org-wild-notifier--notify (event-msg)
   "Notify about an event using `alert' library.
