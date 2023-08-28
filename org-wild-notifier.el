@@ -294,6 +294,22 @@ EVENT-MSG is a string representation of the event."
          :title org-wild-notifier-notification-title
          :severity org-wild-notifier--alert-severity))
 
+(defun org-wild-notifier--timestamp-parse (timestamp)
+  (let ((parsed (org-parse-time-string timestamp))
+        (today (org-format-time-string "<%Y-%m-%d>")))
+    ;; seconds-to-time returns also milliseconds and nanoseconds so we
+    ;; have to "trim" the list
+    (butlast 
+     (seconds-to-time
+      (org-time-add
+       ;; we get the cycled absolute day (not hour and minutes)
+       (org-time-from-absolute (org-closest-date timestamp today 'past))
+       ;; so we have to add the minutes too
+       (+ (* (decoded-time-hour parsed) 3600)
+          (* (decoded-time-minute parsed) 60))))
+     2)
+))
+
 (defun org-wild-notifier--extract-time (marker)
   "Extract timestamps from MARKER.
 Timestamps are extracted as cons cells.  car holds org-formatted
@@ -303,7 +319,7 @@ string, cdr holds time in list-of-integer format."
     (let ((org-timestamp (org-entry-get marker it)))
       (and org-timestamp
            (cons org-timestamp
-                 (apply 'encode-time (org-parse-time-string org-timestamp)))))
+                 (org-wild-notifier--timestamp-parse org-timestamp))))
     '("DEADLINE" "SCHEDULED" "TIMESTAMP"))))
 
 (defun org-wild-notifier--extract-title (marker)
