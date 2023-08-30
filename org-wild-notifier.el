@@ -299,7 +299,7 @@ EVENT-MSG is a string representation of the event."
         (today (org-format-time-string "<%Y-%m-%d>")))
     ;; seconds-to-time returns also milliseconds and nanoseconds so we
     ;; have to "trim" the list
-    (butlast 
+    (butlast
      (seconds-to-time
       (org-time-add
        ;; we get the cycled absolute day (not hour and minutes)
@@ -307,8 +307,7 @@ EVENT-MSG is a string representation of the event."
        ;; so we have to add the minutes too
        (+ (* (decoded-time-hour parsed) 3600)
           (* (decoded-time-minute parsed) 60))))
-     2)
-))
+     2)))
 
 (defun org-wild-notifier--extract-time (marker)
   "Extract timestamps from MARKER.
