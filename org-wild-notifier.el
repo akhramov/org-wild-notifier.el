@@ -145,16 +145,6 @@ in order to ignore seconds."
   (apply 'encode-time
          (append '(0 0 0) (nthcdr 3 (decode-time (current-time))))))
 
-(defun org-wild-notifier--always-notify-p (event)
-  "Check that notification for the EVENT should be done regardless of time.
-For now, the only case that handled is day-wide events."
-  (when org-wild-notifier--day-wide-events
-    (let ((today (org-wild-notifier--today)))
-      ;; SPIKE: Org timestamps without "time" section are shorter than
-      ;; 16 characters.
-      (--any-p (and (<= (length (car it)) 16) (equal today (cdr it)))
-               (cadr (assoc 'times event))))))
-
 (defun org-wild-notifier--timestamp-within-interval-p (timestamp interval)
   "Check whether TIMESTAMP is within notification INTERVAL."
   (org-wild-notifier--time=
@@ -164,11 +154,23 @@ For now, the only case that handled is day-wide events."
 (defun org-wild-notifier--notifications (event)
   "Get notifications for given EVENT.
 Returns a list of time information interval pairs."
-  (if (org-wild-notifier--always-notify-p event)
-      '(-1)
-    (->> (list (cadr (assoc 'times event)) (cdr (assoc 'intervals event)))
+  (->> (list
+        (org-wild-notifier--filter-day-wide-events (cadr (assoc 'times event)))
+        (cdr (assoc 'intervals event)))
          (apply '-table-flat (lambda (ts int) (list ts int)))
-         (--filter (org-wild-notifier--timestamp-within-interval-p (cdar it) (cadr it))))))
+         ;; When no values are provided for table flat, we get the second values
+         ;; paired with nil.
+         (--filter (not (null (car it))))
+         (--filter (org-wild-notifier--timestamp-within-interval-p (cdar it) (cadr it)))))
+
+(defun org-wild-notifier--has-timestamp (s)
+  (string-match org-ts-regexp0 s)
+  (match-beginning 7))
+
+(defun org-wild-notifier--filter-day-wide-events (times)
+  (if org-wild-notifier--day-wide-events
+      times
+    (--filter (org-wild-notifier--has-timestamp (car it)) times)))
 
 (defun org-wild-notifier--time-left (seconds)
   "Human-friendly representation for SECONDS."
