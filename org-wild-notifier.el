@@ -163,14 +163,12 @@ For now, the only case that handled is day-wide events."
 
 (defun org-wild-notifier--notifications (event)
   "Get notifications for given EVENT.
-Returns a list of notification intervals."
+Returns a list of time information interval pairs."
   (if (org-wild-notifier--always-notify-p event)
       '(-1)
-
-    (->> `(,(cadr (assoc 'times event)) ,(cdr (assoc 'intervals event)))
-         (apply '-table-flat (lambda (ts int) `(,(cdr ts) ,int)))
-         (--filter (apply 'org-wild-notifier--timestamp-within-interval-p it))
-         (-map 'cadr))))
+    (->> (list (cadr (assoc 'times event)) (cdr (assoc 'intervals event)))
+         (apply '-table-flat (lambda (ts int) (list ts int)))
+         (--filter (org-wild-notifier--timestamp-within-interval-p (cdar it) (cadr it))))))
 
 (defun org-wild-notifier--time-left (seconds)
   "Human-friendly representation for SECONDS."
@@ -184,9 +182,11 @@ Returns a list of notification intervals."
 
 (defun org-wild-notifier--get-hh-mm-from-org-time-string (time-string)
   "Convert given org time-string TIME-STRING into string with 'hh:mm' format."
-  (if (>= (length time-string) 22)
-      (substring time-string 16 21)
-      "00:00"))
+  (if (string-match "\\([0-9]+\\):\\([0-9]+\\)" time-string)
+      (format "%s:%s"
+              (string-to-number (match-string 1 time-string))
+              (string-to-number (match-string 2 time-string)))
+    "00:00"))
 
 (defun org-wild-notifier--notification-text (str-interval event)
   "For given STR-INTERVAL list and EVENT get notification wording."
@@ -199,8 +199,7 @@ Returns a list of notification intervals."
   "Get notifications for given EVENT.
 Returns a list of notification messages"
   (->> (org-wild-notifier--notifications event)
-       (--zip-with (cons (car it) other) (cadr (assoc 'times event)))
-       (--map (org-wild-notifier--notification-text it event))))
+       (--map (org-wild-notifier--notification-text `(,(caar it) . ,(cadr it)) event))))
 
 (defun org-wild-notifier--get-tags (marker)
   "Retrieve tags of MARKER."
