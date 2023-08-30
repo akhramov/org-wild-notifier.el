@@ -115,6 +115,12 @@ options: 'high 'medium 'low"
   :type 'symbol
   :options '(high medium low))
 
+(defcustom org-wild-notifier-extra-alert-plist nil
+  "Additional arguments that should be passed to invocations of `alert'."
+  :package-version "v0.5.0"
+  :group 'org-wild-notifier
+  :type 'plist)
+
 (defvar org-wild-notifier--day-wide-events nil
   "If truthy, notifies about day-wide events.")
 
@@ -289,10 +295,12 @@ Returns a list of notification messages"
 (defun org-wild-notifier--notify (event-msg)
   "Notify about an event using `alert' library.
 EVENT-MSG is a string representation of the event."
-  (alert event-msg
-         :icon org-wild-notifier-notification-icon
-         :title org-wild-notifier-notification-title
-         :severity org-wild-notifier--alert-severity))
+  (apply
+   'alert event-msg
+   :icon org-wild-notifier-notification-icon
+   :title org-wild-notifier-notification-title
+   :severity org-wild-notifier--alert-severity
+   org-wild-notifier-extra-alert-plist))
 
 (defun org-wild-notifier--timestamp-parse (timestamp)
   (let ((parsed (org-parse-time-string timestamp))
