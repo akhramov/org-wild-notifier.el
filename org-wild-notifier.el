@@ -122,6 +122,14 @@ anything."
   :group 'org-wild-notifier
   :type '(function))
 
+(defcustom org-wild-notifier-additional-environment-regexes nil
+  "Additional regular expressions that should be provided to
+`async-inject-environment' before running the async command to
+check notifications."
+  :package-version '(org-wild-notifier . "0.5.0")
+  :group 'org-wild-notifier
+  :type '(string))
+
 (defcustom org-wild-notifier-predicate-blacklist
   '(org-wild-notifier-done-keywords-predicate)
   "Never receive notifications for events matching these predicates.
@@ -351,47 +359,51 @@ Returns a list of notification messages"
           (-remove markers))
     markers))
 
+(defconst org-wild-notifier-default-environment-regex
+  (macroexpand
+   `(rx string-start
+        (or ,@(mapcar (lambda (literal) (list 'literal literal))
+                (list
+                 "org-agenda-files"
+                 "load-path"
+                 "org-todo-keywords"
+                 "org-wild-notifier-alert-time"
+                 "org-wild-notifier-keyword-whitelist"
+                 "org-wild-notifier-keyword-blacklist"
+                 "org-wild-notifier-tags-whitelist"
+                 "org-wild-notifier-tags-blacklist"
+                 "org-wild-notifier-predicate-whitelist"
+                 "org-wild-notifier-predicate-blacklist")))
+        string-end)))
+
+
+(defun org-wild-notifier-environment-regex ()
+  (macroexpand
+   `(rx (or
+         ,@(mapcar (lambda (regexp) (list 'regexp regexp))
+                   (cons org-wild-notifier-default-environment-regex
+                         org-wild-notifier-additional-environment-regexes))))))
+
 (defun org-wild-notifier--retrieve-events ()
   "Get events from agenda view."
-  (let ((agenda-files (-filter 'file-exists-p (org-agenda-files)))
-        ;; Some package managers manipulate `load-path` variable.
-        (my-load-path load-path)
-        (todo-keywords org-todo-keywords)
-        (alert-time org-wild-notifier-alert-time)
-        (keyword-whitelist org-wild-notifier-keyword-whitelist)
-        (keyword-blacklist org-wild-notifier-keyword-blacklist)
-        (tags-whitelist org-wild-notifier-tags-whitelist)
-        (tags-blacklist org-wild-notifier-tags-blacklist)
-        (predicate-whitelist org-wild-notifier-predicate-whitelist)
-        (predicate-blacklist org-wild-notifier-predicate-blacklist))
-    (lambda ()
-      (setf org-agenda-use-time-grid nil)
-      (setf org-agenda-compact-blocks t)
-      (setf org-agenda-files agenda-files)
-      (setf load-path my-load-path)
-      (setf org-todo-keywords todo-keywords)
-      (setf org-wild-notifier-alert-time alert-time)
-      (setf org-wild-notifier-keyword-whitelist keyword-whitelist)
-      (setf org-wild-notifier-keyword-blacklist keyword-blacklist)
-      (setf org-wild-notifier-tags-whitelist tags-whitelist)
-      (setf org-wild-notifier-tags-blacklist tags-blacklist)
-      (setf org-wild-notifier-predicate-whitelist predicate-whitelist)
-      (setf org-wild-notifier-predicate-blacklist predicate-blacklist)
+  `(lambda ()
+    (setf org-agenda-use-time-grid nil)
+    (setf org-agenda-compact-blocks t)
+    ,(async-inject-variables (org-wild-notifier-environment-regex))
 
-      (package-initialize)
-      (require 'org-wild-notifier)
+    (package-initialize)
+    (require 'org-wild-notifier)
 
-      (org-agenda-list 2
-                       (org-read-date nil nil "today"))
+    (org-agenda-list 2 (org-read-date nil nil "today"))
 
-      (->> (org-split-string (buffer-string) "\n")
-           (--map (plist-get
-                   (org-fix-agenda-info (text-properties-at 0 it))
-                   'org-marker))
-           (-non-nil)
-           (org-wild-notifier--apply-whitelist)
-           (org-wild-notifier--apply-blacklist)
-           (-map 'org-wild-notifier--gather-info)))))
+    (->> (org-split-string (buffer-string) "\n")
+         (--map (plist-get
+                 (org-fix-agenda-info (text-properties-at 0 it))
+                 'org-marker))
+         (-non-nil)
+         (org-wild-notifier--apply-whitelist)
+         (org-wild-notifier--apply-blacklist)
+         (-map 'org-wild-notifier--gather-info))))
 
 (defun org-wild-notifier--notify (event-msg)
   "Notify about an event using `alert' library.
