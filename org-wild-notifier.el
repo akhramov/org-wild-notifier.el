@@ -1,5 +1,6 @@
 ;;; org-wild-notifier.el --- Customizable org-agenda notifications -*- lexical-binding: t -*-
 
+
 ;; Copyright (C) 2017 Artem Khramov
 
 ;; Author: Artem Khramov <akhramov+emacs@pm.me>
@@ -48,7 +49,6 @@
 (require 'async)
 (require 'org-agenda)
 (require 'cl-lib)
-
 
 (defgroup org-wild-notifier nil
   "org-wild-notifier customization options"
@@ -127,8 +127,11 @@ options: 'high 'medium 'low"
   :group 'org-wild-notifier
   :type 'plist)
 
-(defvar org-wild-notifier--day-wide-events nil
-  "If truthy, notifies about day-wide events.")
+(defcustom org-wild-notifier-day-wide-alert-times nil
+  "A list of time of day strings at which alerts for day wide events should trigger."
+  :package-version '(org-wild-notifier . "0.3.1")
+  :group 'org-wild-notifier
+  :type 'string)
 
 (defvar org-wild-notifier--timer nil
   "Timer value.")
@@ -180,9 +183,7 @@ Returns a list of time information interval pairs."
   (match-beginning 7))
 
 (defun org-wild-notifier--filter-day-wide-events (times)
-  (if org-wild-notifier--day-wide-events
-      times
-    (--filter (org-wild-notifier--has-timestamp (car it)) times)))
+  (--filter (org-wild-notifier--has-timestamp (car it)) times))
 
 (defun org-wild-notifier--time-left (seconds)
   "Human-friendly representation for SECONDS."
@@ -206,6 +207,45 @@ Returns a list of time information interval pairs."
           (cdr (assoc 'title event))
           (org-wild-notifier--get-hh-mm-from-org-time-string (car str-interval))
           (org-wild-notifier--time-left (* 60 (cdr str-interval)))))
+
+(defun org-wild-notifier-get-minutes-into-day (time)
+  (org-duration-to-minutes (org-get-time-of-day time t)))
+
+(defun org-wild-notifier-get-hours-minutes-from-time (time-string)
+  (let ((total-minutes (truncate (org-wild-notifier-get-minutes-into-day time-string))))
+    (list (/ total-minutes 60)
+          (mod total-minutes 60))))
+
+(defun org-wild-notifier-set-hours-minutes-for-time (time hours minutes)
+  (cl-destructuring-bind (_s _m _h day month year dow dst utcoff) (decode-time time)
+    (encode-time 0 minutes hours day month year dow dst utcoff)))
+
+(defun org-wild-notifier-current-time-matches-time-of-day-string (time-of-day-string)
+  (let ((now (current-time)))
+    (org-wild-notifier--time=
+     now
+     (apply 'org-wild-notifier-set-hours-minutes-for-time
+            now
+            (org-wild-notifier-get-hours-minutes-from-time time-of-day-string)))))
+
+(defun org-wild-notifier-current-time-is-day-wide-time ()
+  (--any (org-wild-notifier-current-time-matches-time-of-day-string it)
+         org-wild-notifier-day-wide-alert-times))
+
+(defun org-wild-notifier-day-wide-notifications (events)
+  (->> events
+       (-filter 'org-wild-notifier-event-has-any-day-wide-timestamp)
+       (-map 'org-wild-notifier--day-wide-notification-text)
+       (-uniq)))
+
+(defun org-wild-notifier-event-has-any-day-wide-timestamp (event)
+  (--any (not (org-wild-notifier--has-timestamp (car it)))
+         (car (cdr (assoc 'times event )))))
+
+(defun org-wild-notifier--day-wide-notification-text (event)
+  "For given STR-INTERVAL list and EVENT get notification wording."
+  (format "%s is due or scheduled today"
+          (cdr (assoc 'title event))))
 
 (defun org-wild-notifier--check-event (event)
   "Get notifications for given EVENT.
@@ -371,13 +411,24 @@ MARKER acts like event's identifier."
 Timer is scheduled on the beginning of every minute, so for
 smoother experience this function also runs a check without timer."
   (org-wild-notifier--stop)
-
-  (let ((org-wild-notifier--day-wide-events t))
-    (org-wild-notifier-check))
+  (org-wild-notifier-check)
 
   (--> (format-time-string "%H:%M" (time-add (current-time) 60))
        (run-at-time it 60 'org-wild-notifier-check)
        (setf org-wild-notifier--timer it)))
+
+(defun org-wild-notifier--check-events (events)
+  (setq org-wild-notifier--process nil)
+  (-each
+      (->> events
+           (-map 'org-wild-notifier--check-event)
+           (-flatten)
+           (-uniq))
+    'org-wild-notifier--notify)
+  (when (org-wild-notifier-current-time-is-day-wide-time)
+    (-map 'org-wild-notifier--notify
+          (org-wild-notifier-day-wide-notifications events)))
+  (setq org-wild-notifier--last-check-time (current-time)))
 
 ;;;###autoload
 (defun org-wild-notifier-check ()
@@ -385,22 +436,13 @@ smoother experience this function also runs a check without timer."
 
 Do nothing if a check is already in progress in the background."
   (interactive)
-
   (unless (and org-wild-notifier--process
                (process-live-p org-wild-notifier--process))
     (setq org-wild-notifier--process
           (let ((default-directory user-emacs-directory))
             (async-start
              (org-wild-notifier--retrieve-events)
-             (lambda (events)
-               (setq org-wild-notifier--process nil)
-               (-each
-                   (->> events
-                        (-map 'org-wild-notifier--check-event)
-                        (-flatten)
-                        (-uniq))
-                 'org-wild-notifier--notify)
-               (setq org-wild-notifier--last-check-time (current-time))))))))
+             'org-wild-notifier--check-events)))))
 
 ;;;###autoload
 (define-minor-mode org-wild-notifier-mode
