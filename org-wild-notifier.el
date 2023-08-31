@@ -263,9 +263,14 @@ Returns a list of time information interval pairs."
        (-uniq)))
 
 (defun org-wild-notifier-display-as-day-wide-event (event)
-  (or (org-wild-notifier-event-has-any-day-wide-timestamp event)
-      (and org-wild-notifier-show-any-overdue-with-day-wide-alerts
-           (org-wild-notifier-event-has-any-passed-time event))))
+  ;; `org-wild-notifier-event-has-any-passed-time' event is a requirement,
+  ;; regardless of whether
+  ;; `org-wild-notifier-show-any-overdue-with-day-wide-alerts' is set because
+  ;; the events list can include events scheduled tomorrow. We only want to
+  ;; alert for things scheduled today.
+  (and (org-wild-notifier-event-has-any-passed-time event)
+      (or org-wild-notifier-show-any-overdue-with-day-wide-alerts
+           (org-wild-notifier-event-has-any-day-wide-timestamp event))))
 
 (defun org-wild-notifier-event-has-any-day-wide-timestamp (event)
   (--any (not (org-wild-notifier--has-timestamp (car it)))
