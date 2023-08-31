@@ -107,6 +107,12 @@ Leave this variable blank if you do not want to filter anything."
   :group 'org-wild-notifier
   :type '(repeat string))
 
+(defcustom org-wild-notifier-display-time-format-string "%I:%M %p"
+  "The format string that should be passed to `format-time-string' to display a time."
+  :package-version '(org-wild-notifier . "0.5.0")
+  :group 'org-wild-notifier
+  :type 'string)
+
 (defcustom org-wild-notifier--alert-severity 'medium
   "Severity of the alert.
 options: 'high 'medium 'low"
@@ -190,11 +196,9 @@ Returns a list of time information interval pairs."
 
 (defun org-wild-notifier--get-hh-mm-from-org-time-string (time-string)
   "Convert given org time-string TIME-STRING into string with 'hh:mm' format."
-  (if (string-match "\\([0-9]+\\):\\([0-9]+\\)" time-string)
-      (format "%s:%s"
-              (string-to-number (match-string 1 time-string))
-              (string-to-number (match-string 2 time-string)))
-    "00:00"))
+  (format-time-string
+   org-wild-notifier-display-time-format-string
+   (encode-time (org-parse-time-string time-string))))
 
 (defun org-wild-notifier--notification-text (str-interval event)
   "For given STR-INTERVAL list and EVENT get notification wording."
