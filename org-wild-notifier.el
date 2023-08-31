@@ -81,7 +81,7 @@ to an event."
   :group 'org-wild-notifier
   :type 'string)
 
-(defcustom org-wild-notifier-keyword-whitelist '("TODO")
+(defcustom org-wild-notifier-keyword-whitelist nil
   "Receive notifications for these keywords only.
 Leave this variable blank if you do not want to filter anything."
   :package-version '(org-wild-notifier . "0.2.2")
@@ -116,7 +116,8 @@ anything."
   :group 'org-wild-notifier
   :type '(function))
 
-(defcustom org-wild-notifier-predicate-blacklist nil
+(defcustom org-wild-notifier-predicate-blacklist
+  '(org-wild-notifier-done-keywords-predicate)
   "Never receive notifications for events matching these predicates.
 Each function should take an event POM and return non-nil iff that event should
 not trigger a notification."
@@ -258,6 +259,12 @@ Returns a list of notification messages"
             (--some? (funcall it marker) org-wild-notifier-predicate-blacklist))])
        (--filter (aref it 0))
        (--map (aref it 1))))
+
+(defun org-wild-notifier-done-keywords-predicate (marker)
+  (save-excursion
+    (set-buffer (marker-buffer marker))
+    (goto-char (marker-position marker))
+    (member (nth 2 (org-heading-components)) org-done-keywords)))
 
 (defun org-wild-notifier--apply-whitelist (markers)
   "Apply whitelist to MARKERS."
