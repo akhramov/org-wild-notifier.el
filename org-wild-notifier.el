@@ -5,7 +5,7 @@
 
 ;; Author: Artem Khramov <akhramov+emacs@pm.me>
 ;; Created: 6 Jan 2017
-;; Version: 0.4.1
+;; Version: 0.5.0
 ;; Package-Requires: ((alert "1.2") (async "1.9.3") (dash "2.18.0") (emacs "24.4"))
 ;; Keywords: notification alert org org-agenda agenda
 ;; URL: https://github.com/akhramov/org-wild-notifier.el
@@ -147,7 +147,13 @@ options: 'high 'medium 'low"
 
 (defcustom org-wild-notifier-day-wide-alert-times nil
   "A list of time of day strings at which alerts for day wide events should trigger."
-  :package-version '(org-wild-notifier . "0.3.1")
+  :package-version '(org-wild-notifier . "0.5.0")
+  :group 'org-wild-notifier
+  :type 'string)
+
+(defcustom org-wild-notifier-show-any-overdue-with-day-wide-alerts t
+  "Show any overdue TODO items along with day wide alerts whenever they are shown."
+  :package-version '(org-wild-notifier . "0.5.0")
   :group 'org-wild-notifier
   :type 'string)
 
@@ -252,12 +258,21 @@ Returns a list of time information interval pairs."
 
 (defun org-wild-notifier-day-wide-notifications (events)
   (->> events
-       (-filter 'org-wild-notifier-event-has-any-day-wide-timestamp)
+       (-filter 'org-wild-notifier-display-as-day-wide-event)
        (-map 'org-wild-notifier--day-wide-notification-text)
        (-uniq)))
 
+(defun org-wild-notifier-display-as-day-wide-event (event)
+  (or (org-wild-notifier-event-has-any-day-wide-timestamp event)
+      (and org-wild-notifier-show-any-overdue-with-day-wide-alerts
+           (org-wild-notifier-event-has-any-passed-time event))))
+
 (defun org-wild-notifier-event-has-any-day-wide-timestamp (event)
   (--any (not (org-wild-notifier--has-timestamp (car it)))
+         (car (cdr (assoc 'times event)))))
+
+(defun org-wild-notifier-event-has-any-passed-time (event)
+  (--any (time-less-p (cdr it) (current-time))
          (car (cdr (assoc 'times event )))))
 
 (defun org-wild-notifier--day-wide-notification-text (event)
