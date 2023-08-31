@@ -50,7 +50,6 @@
 (require 'org-agenda)
 (require 'cl-lib)
 
-
 (defgroup org-wild-notifier nil
   "org-wild-notifier customization options"
   :group 'org)
@@ -122,9 +121,6 @@ options: 'high 'medium 'low"
   :group 'org-wild-notifier
   :type 'string)
 
-(defvar org-wild-notifier--day-wide-events nil
-  "If truthy, notifies about day-wide events.")
-
 (defvar org-wild-notifier--timer nil
   "Timer value.")
 
@@ -175,9 +171,7 @@ Returns a list of time information interval pairs."
   (match-beginning 7))
 
 (defun org-wild-notifier--filter-day-wide-events (times)
-  (if org-wild-notifier--day-wide-events
-      times
-    (--filter (org-wild-notifier--has-timestamp (car it)) times)))
+  (--filter (org-wild-notifier--has-timestamp (car it)) times))
 
 (defun org-wild-notifier--time-left (seconds)
   "Human-friendly representation for SECONDS."
@@ -406,9 +400,7 @@ MARKER acts like event's identifier."
 Timer is scheduled on the beginning of every minute, so for
 smoother experience this function also runs a check without timer."
   (org-wild-notifier--stop)
-
-  (let ((org-wild-notifier--day-wide-events t))
-    (org-wild-notifier-check))
+  (org-wild-notifier-check)
 
   (--> (format-time-string "%H:%M" (time-add (current-time) 60))
        (run-at-time it 60 'org-wild-notifier-check)
