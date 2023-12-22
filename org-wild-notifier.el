@@ -507,7 +507,8 @@ Do nothing if a check is already in progress in the background."
   (unless (and org-wild-notifier--process
                (process-live-p org-wild-notifier--process))
     (setq org-wild-notifier--process
-          (let ((default-directory user-emacs-directory))
+          (let ((default-directory user-emacs-directory)
+                (async-prompt-for-password nil))
             (async-start
              (org-wild-notifier--retrieve-events)
              'org-wild-notifier--check-events)))
