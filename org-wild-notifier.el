@@ -414,6 +414,7 @@ EVENT-MSG is a string representation of the event."
    :icon org-wild-notifier-notification-icon
    :title org-wild-notifier-notification-title
    :severity org-wild-notifier--alert-severity
+   :category 'org-wild-notifier
    org-wild-notifier-extra-alert-plist))
 
 (defun org-wild-notifier--timestamp-parse (timestamp)
