@@ -510,11 +510,11 @@ Do nothing if a check is already in progress in the background."
                (process-live-p org-wild-notifier--process))
     (setq org-wild-notifier--process
           (let ((default-directory user-emacs-directory)
-                (async-prompt-for-password nil))
+                (async-prompt-for-password nil)
+                (async-process-noquery-on-exit t))
             (async-start
              (org-wild-notifier--retrieve-events)
-             'org-wild-notifier--check-events)))
-    (set-process-query-on-exit-flag org-wild-notifier--process nil)))
+             'org-wild-notifier--check-events)))))
 
 ;;;###autoload
 (define-minor-mode org-wild-notifier-mode
